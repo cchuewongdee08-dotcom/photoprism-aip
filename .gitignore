@@ -10,6 +10,9 @@ data/*.db-wal
 public/uploads/*
 !public/uploads/.gitkeep
 
+# สำเนาสำรองรูป (สร้างด้วยมือ ไม่ต้อง commit)
+_backup/
+
 # Logs / OS
 *.log
 .DS_Store
