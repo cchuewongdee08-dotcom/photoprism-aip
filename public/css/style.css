@@ -1,0 +1,104 @@
+/* ==========================================================
+   PhotoPrism - สไตล์เพิ่มเติม (ใช้ร่วมกับ Bootstrap 5)
+   ========================================================== */
+
+body {
+  background-color: #f4f6fa;
+  font-family: 'Sarabun', 'Noto Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.navbar {
+  background: linear-gradient(135deg, #1b2a4a 0%, #2d4a7c 100%);
+}
+
+.navbar-brand {
+  letter-spacing: 0.5px;
+}
+
+/* ---------- การ์ดรูปภาพ ---------- */
+.photo-card {
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  overflow: hidden;
+}
+
+.photo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: #e9ecef;
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail-img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  width: 100%;
+}
+
+.table-thumb {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+}
+
+/* ---------- Album ---------- */
+.album-card {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.album-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ---------- ป้ายวิธีใช้ HTTP ในหน้าทดสอบสิทธิ์ ---------- */
+.method-badge {
+  font-family: monospace;
+  min-width: 62px;
+  text-align: center;
+}
+
+.method-get    { background-color: #0d6efd; color: #fff; }
+.method-post   { background-color: #198754; color: #fff; }
+.method-patch  { background-color: #ffc107; color: #000; }
+.method-delete { background-color: #dc3545; color: #fff; }
+
+/* ---------- หน้า Login ---------- */
+.card {
+  border-radius: 14px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(45, 74, 124, 0.2);
+}
+
+code {
+  background-color: #eef1f6;
+  color: #1b2a4a;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+#resultBody {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.table > :not(caption) > * > * {
+  vertical-align: middle;
+}
+
+.badge {
+  font-weight: 500;
+}

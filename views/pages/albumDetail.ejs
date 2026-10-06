@@ -1,0 +1,52 @@
+<%- include('../partials/header', { title }) %>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/albums">Album ของฉัน</a></li>
+    <li class="breadcrumb-item active" aria-current="page"><%= album.name %></li>
+  </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-folder-fill text-warning me-2"></i><%= album.name %></h4>
+    <p class="text-muted small mb-0">
+      <%= album.description || 'ไม่มีคำอธิบาย' %> · เจ้าของ Album: <strong><%= album.owner_name %></strong>
+      (<%= album.owner_username %>) · <strong><%= total %></strong> รูป
+    </p>
+  </div>
+
+  <% if (canManage) { %>
+    <div class="d-flex gap-2">
+      <form method="post" action="/albums/<%= album.id %>/edit" class="d-flex gap-2">
+        <input type="hidden" name="name" value="<%= album.name %>">
+        <input type="text" class="form-control form-control-sm" name="description"
+               value="<%= album.description %>" placeholder="แก้ไขคำอธิบาย" maxlength="300">
+        <button class="btn btn-sm btn-outline-primary" type="submit">บันทึก</button>
+      </form>
+      <a class="btn btn-sm btn-outline-secondary" href="/upload?album=<%= album.id %>">+ เพิ่มรูป</a>
+    </div>
+  <% } %>
+</div>
+
+<% if (photos.length === 0) { %>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-images display-4 text-muted"></i>
+      <h5 class="mt-3">Album นี้ยังไม่มีรูปภาพ</h5>
+      <% if (canManage) { %>
+        <a class="btn btn-primary mt-2" href="/upload?album=<%= album.id %>">อัปโหลดรูปเข้า Album นี้</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+    <% photos.forEach((photo) => { %>
+      <%- include('../partials/photoCard', { photo }) %>
+    <% }) %>
+  </div>
+
+  <%- include('../partials/pagination', { baseUrl: `/albums/${album.id}` }) %>
+<% } %>
+
+<%- include('../partials/footer') %>

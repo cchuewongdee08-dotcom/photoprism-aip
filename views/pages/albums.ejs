@@ -1,0 +1,108 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-folder2 me-2"></i>Album ของฉัน</h4>
+    <p class="text-muted small mb-0">
+      <% if (isAdmin) { %>
+        <% if (albumScope === 'all') { %>
+          <strong><%= total %></strong> Album ทั้งระบบ (ผู้ดูแลระบบเห็น Album ของผู้ใช้ทุกคน)
+        <% } else { %>
+          <strong><%= total %></strong> Album ของฉัน — ผู้ดูแลระบบสามารถดู Album ทั้งระบบได้
+          <a href="/albums?scope=all" class="ms-1">ดูทั้งระบบ</a>
+        <% } %>
+      <% } else { %>
+        <strong><%= total %></strong> Album ของฉัน — ผู้ใช้ทั่วไปเห็นเฉพาะ Album ของตัวเอง
+      <% } %>
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <% if (albums.length === 0) { %>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-folder-plus display-4 text-muted"></i>
+          <h5 class="mt-3">ยังไม่มี Album</h5>
+          <p class="text-muted">สร้าง Album เพื่อจัดกลุ่มรูปภาพของคุณ</p>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="row row-cols-1 row-cols-md-2 g-3">
+        <% albums.forEach((album) => { %>
+          <div class="col">
+            <div class="card album-card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="card-title mb-1">
+                      <i class="bi bi-folder-fill text-warning me-2"></i>
+                      <a href="/albums/<%= album.id %>" class="text-decoration-none text-dark"><%= album.name %></a>
+                    </h5>
+                    <p class="text-muted small mb-2"><%= album.description || 'ไม่มีคำอธิบาย' %></p>
+                    <span class="badge bg-light text-dark border">
+                      <i class="bi bi-image me-1"></i><%= album.photo_count %> รูป
+                    </span>
+                    <% if (isAdmin && album.user_id !== currentUser.id) { %>
+                      <span class="badge bg-warning text-dark ms-1">ของ <%= album.owner_username %></span>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                  <a class="btn btn-sm btn-outline-primary" href="/albums/<%= album.id %>">
+                    <i class="bi bi-images me-1"></i>เปิดดู
+                  </a>
+                  <form method="post" action="/albums/<%= album.id %>/delete" class="d-inline"
+                        onsubmit="return confirmDelete('ยืนยันการลบ Album \"<%= album.name %>\" ? (รูปภาพใน Album จะยังอยู่ในระบบ)')">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div class="card-footer bg-white border-0 pt-0 pb-2 small text-muted">
+                สร้างเมื่อ <%= album.created_at %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-plus-circle me-2"></i>สร้าง Album ใหม่
+      </div>
+      <div class="card-body">
+        <form method="post" action="/albums" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="name">ชื่อ Album *</label>
+            <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>"
+                   id="name" name="name" value="<%= values.name || '' %>" maxlength="80">
+            <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="description">คำอธิบาย</label>
+            <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>"
+                      id="description" name="description" rows="3" maxlength="300"><%= values.description || '' %></textarea>
+            <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">
+            <i class="bi bi-folder-plus me-1"></i>สร้าง Album
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="alert alert-info small mt-3">
+      <i class="bi bi-shield-lock me-1"></i>
+      <strong>สิทธิ์:</strong>
+      User จัดการได้เฉพาะ Album ของตัวเอง — ถ้ายิง URL หรือ API ของ Album คนอื่น ระบบจะตอบ 403
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

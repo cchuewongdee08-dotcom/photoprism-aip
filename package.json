@@ -1,0 +1,31 @@
+{
+  "name": "photoprism",
+  "version": "1.0.0",
+  "description": "PhotoPrism - ระบบจัดการรูปภาพสำหรับกลุ่ม พร้อมระบบสิทธิ์ User / Admin",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/db/seed.js",
+    "reset": "node src/db/seed.js --reset",
+    "test": "node test/permission-test.js"
+  },
+  "keywords": [
+    "photo",
+    "gallery",
+    "express",
+    "sqlite"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "image-size": "^2.0.4",
+    "memorystore": "^1.3.0",
+    "multer": "^2.0.0"
+  }
+}

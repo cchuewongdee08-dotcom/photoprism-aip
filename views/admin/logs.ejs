@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-clock-history me-2"></i>บันทึกการกระทำ (Activity Log)</h4>
+    <p class="text-muted small mb-0">
+      ระบบบันทึกทุกคำสั่งสำคัญของผู้ใช้และผู้ดูแล — ทั้งหมด <strong><%= total %></strong> รายการ
+      <% if (action) { %> · กรองด้วย "<strong><%= action %></strong>"<% } %>
+    </p>
+  </div>
+  <form class="d-flex gap-2" method="get" action="/admin/logs">
+    <input type="text" name="action" class="form-control" placeholder="กรองตามรหัส เช่น ADMIN_" value="<%= action %>">
+    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-filter"></i></button>
+    <% if (action) { %><a class="btn btn-outline-secondary" href="/admin/logs">ล้าง</a><% } %>
+  </form>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 60px">#</th>
+          <th style="width: 140px">ผู้ทำรายการ</th>
+          <th style="width: 220px">ประเภทการกระทำ</th>
+          <th>รายละเอียด</th>
+          <th style="width: 170px">เวลา</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (logs.length === 0) { %>
+          <tr><td colspan="5" class="text-center text-muted py-4">ไม่พบรายการ</td></tr>
+        <% } %>
+        <% logs.forEach((log) => { %>
+          <tr>
+            <td class="text-muted"><%= log.id %></td>
+            <td>
+              <% if (log.username === 'admin') { %>
+                <span class="badge bg-warning text-dark">admin</span>
+              <% } else { %>
+                <span class="badge bg-info text-dark"><%= log.username %></span>
+              <% } %>
+            </td>
+            <td><code class="small"><%= log.action %></code></td>
+            <td class="small"><%= log.target %></td>
+            <td class="small text-muted"><%= log.created_at %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<nav aria-label="แบ่งหน้า" class="mt-3">
+  <ul class="pagination justify-content-center">
+    <li class="page-item <%= page <= 1 ? 'disabled' : '' %>">
+      <a class="page-link" href="/admin/logs?page=<%= page - 1 %>&action=<%= encodeURIComponent(action) %>">ก่อนหน้า</a>
+    </li>
+    <% const totalPages = Math.max(1, Math.ceil(total / perPage)); %>
+    <li class="page-item disabled"><span class="page-link">หน้า <%= page %> / <%= totalPages %></span></li>
+    <li class="page-item <%= page >= totalPages ? 'disabled' : '' %>">
+      <a class="page-link" href="/admin/logs?page=<%= page + 1 %>&action=<%= encodeURIComponent(action) %>">ถัดไป</a>
+    </li>
+  </ul>
+</nav>
+
+<%- include('../partials/footer') %>

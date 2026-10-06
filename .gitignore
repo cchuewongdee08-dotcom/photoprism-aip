@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Database (สร้างใหม่ได้จาก npm run seed)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# รูปที่ผู้ใช้อัปโหลด
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
+.env

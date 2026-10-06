@@ -1,0 +1,65 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <h4 class="mb-2"><i class="bi bi-shield-check me-2"></i>ทดสอบสิทธิ์ระบบผ่าน API</h4>
+    <p class="mb-2">
+      หน้านี้ใช้ <strong>REST API จริงของระบบ</strong> ไม่ใช่ตัวจำลอง
+      กดปุ่มด้านล่างแล้วจะเห็น <strong>HTTP Status Code</strong> และ <strong>ข้อความตอบกลับ</strong> จาก Server
+      ทุกคำขอถูกตรวจสิทธิ์ที่ <code>middleware</code> ฝั่ง Server ก่อนเสมอ
+    </p>
+    <div class="alert alert-warning small mb-0">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      อยู่ในโหมด <strong>ส่งจริง</strong> — ปุ่ม <code>PATCH</code> จะแก้ข้อมูลจริง
+      (เช่นเปลี่ยนชื่อรูป ID 1 เป็น "แก้ชื่อรูปจากระบบ (ทดสอบ)")
+      ส่วนปุ่ม <code>DELETE /api/admin/users/3</code> ควรไม่กด เพราะจะลบผู้ใช้จริง
+      แนะนำให้ทดสอบสิทธิ์โดยการกดปุ่มกลุ่ม "สิทธิ์ของ Admin" ขณะ Login ด้วยบัญชี User
+      จะได้เห็น 403 ชัด ๆ
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <% endpoints.forEach((group) => { %>
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold"><%= group.group %></div>
+        <div class="list-group list-group-flush">
+          <% group.items.forEach((item) => { %>
+            <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div>
+                <span class="badge method-badge method-<%= item.method.toLowerCase() %> me-2"><%= item.method %></span>
+                <code class="text-break"><%= item.path %></code>
+                <div class="small text-muted ms-1"><%= item.desc %></div>
+              </div>
+              <button class="btn btn-sm btn-outline-primary btn-try"
+                      data-method="<%= item.method %>"
+                      data-path="<%= item.path %>"
+                      data-body='<%= item.body ? JSON.stringify(item.body) : "" %>'>
+                <i class="bi bi-play-fill me-1"></i>ทดสอบ
+              </button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm" id="resultCard">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-terminal me-2"></i>ผลลัพธ์
+      </div>
+      <div class="card-body">
+        <div id="resultStatus" class="mb-2">
+          <span class="badge bg-secondary">ยังไม่ได้ทดสอบ</span>
+        </div>
+        <div id="resultMeta" class="small text-muted mb-2"></div>
+        <pre id="resultBody" class="bg-light border rounded p-3 small mb-0"
+             style="max-height: 420px; overflow: auto;">กดปุ่ม "ทดสอบ" ทางซ้ายเพื่อดูผลลัพธ์</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,117 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-0">
+        <img src="/uploads/<%= photo.file_name %>" alt="<%= photo.title %>" class="img-fluid rounded-top w-100">
+      </div>
+      <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <span class="badge <%= photo.visibility === 'private' ? 'bg-dark' : 'bg-success' %>">
+            <i class="bi <%= photo.visibility === 'private' ? 'bi-lock-fill' : 'bi-unlock-fill' %> me-1"></i>
+            <%= photo.visibility === 'private' ? 'ส่วนตัว (Private)' : 'สาธารณะ (Public)' %>
+          </span>
+          <span class="text-muted small ms-2">อัปโหลดเมื่อ <%= photo.created_at %></span>
+        </div>
+        <div>
+          <a class="btn btn-sm btn-outline-secondary" href="/api/photos/<%= photo.id %>">
+            <i class="bi bi-file-earmark-code me-1"></i>ดูข้อมูล JSON
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h3 class="mb-2"><%= photo.title %></h3>
+        <% if (photo.album_name) { %>
+          <p class="mb-2">
+            <a href="/albums/<%= photo.album_id %>" class="badge bg-secondary text-decoration-none">
+              <i class="bi bi-folder2 me-1"></i><%= photo.album_name %>
+            </a>
+          </p>
+        <% } %>
+        <p class="text-muted"><%= photo.description || 'ไม่มีคำอธิบาย' %></p>
+
+        <% if (photo.tags) { %>
+          <div class="mb-2">
+            <% photo.tags.split(',').map((t) => t.trim()).filter(Boolean).forEach((tag) => { %>
+              <a class="badge bg-light text-dark border text-decoration-none" href="/?q=<%= encodeURIComponent(tag) %>">#<%= tag %></a>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-info-circle me-2"></i>รายละเอียดรูปภาพ (Metadata)
+      </div>
+      <table class="table table-sm mb-0">
+        <tbody>
+          <tr><th class="w-50">ID</th><td><%= photo.id %></td></tr>
+          <tr><th>ชื่อไฟล์ต้นฉบับ</th><td class="text-break"><%= photo.original_name %></td></tr>
+          <tr><th>ชนิดไฟล์</th><td><%= photo.mime_type %></td></tr>
+          <tr><th>ขนาดไฟล์</th><td><%= (photo.file_size / 1024).toFixed(1) %> KB</td></tr>
+          <tr><th>ความกว้าง × สูง</th><td><%= photo.width %> × <%= photo.height %> พิกเซล</td></tr>
+          <tr><th>กล้อง</th><td><%= photo.camera || '-' %></td></tr>
+          <tr><th>เจ้าของ</th><td><%= photo.owner_name %> (<%= photo.owner_username %>)</td></tr>
+          <tr><th>สิทธิ์ของคุณ</th>
+            <td>
+              <% if (canManage) { %>
+                <span class="badge bg-success">แก้ไข / ลบได้</span>
+              <% } else { %>
+                <span class="badge bg-secondary">ดูได้อย่างเดียว</span>
+              <% } %>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (canManage) { %>
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-tools me-2"></i>จัดการรูปภาพ
+        </div>
+        <div class="card-body d-grid gap-2">
+          <a class="btn btn-outline-primary" href="/photos/<%= photo.id %>/edit">
+            <i class="bi bi-pencil-square me-1"></i>แก้ไขข้อมูลรูป
+          </a>
+          <form method="post" action="/photos/<%= photo.id %>/delete"
+                onsubmit="return confirmDelete('ยืนยันการลบรูป \"<%= photo.title %>\" ? การลบไม่สามารถย้อนกลับได้');">
+            <input type="hidden" name="redirect" value="/">
+            <button class="btn btn-outline-danger w-100" type="submit">
+              <i class="bi bi-trash me-1"></i>ลบรูปภาพ
+            </button>
+          </form>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (related && related.length) { %>
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-collection me-2"></i>รูปอื่นของ <%= photo.owner_name %>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-3 g-2">
+            <% related.forEach((item) => { %>
+              <div class="col">
+                <a href="/photo/<%= item.id %>" class="d-block">
+                  <img src="/uploads/<%= item.file_name %>" class="img-fluid rounded thumbnail-img"
+                       alt="<%= item.title %>">
+                </a>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

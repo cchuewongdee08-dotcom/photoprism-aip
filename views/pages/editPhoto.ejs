@@ -1,0 +1,100 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h4 class="mb-3">
+          <i class="bi bi-pencil-square me-2"></i>แก้ไขข้อมูลรูปภาพ
+        </h4>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <img src="/uploads/<%= photo.file_name %>" class="img-fluid rounded border" alt="<%= photo.title %>">
+            <p class="text-muted small mt-2 mb-0">
+              ไฟล์รูปเดิม · <%= photo.width %>×<%= photo.height %> · <%= (photo.file_size / 1024).toFixed(1) %> KB
+            </p>
+          </div>
+          <div class="col-md-8">
+            <table class="table table-sm small mb-0">
+              <tbody>
+                <tr><th class="w-25">เจ้าของรูป</th><td><%= photo.owner_name %> (<%= photo.owner_username %>)</td></tr>
+                <tr><th>ไฟล์ต้นฉบับ</th><td class="text-break"><%= photo.original_name %></td></tr>
+                <tr><th>อัปโหลดเมื่อ</th><td><%= photo.created_at %></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <form method="post" action="/photos/<%= photo.id %>/edit" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="title">ชื่อรูป *</label>
+              <input type="text" class="form-control <%= errors.title ? 'is-invalid' : '' %>"
+                     id="title" name="title" value="<%= values.title || '' %>" maxlength="120">
+              <% if (errors.title) { %><div class="invalid-feedback"><%= errors.title %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="visibility">สิทธิ์การมองเห็น</label>
+              <select class="form-select" id="visibility" name="visibility">
+                <option value="public" <%= values.visibility === 'public' ? 'selected' : '' %>>
+                  สาธารณะ — ทุกคนเห็นได้
+                </option>
+                <option value="private" <%= values.visibility === 'private' ? 'selected' : '' %>>
+                  ส่วนตัว — เฉพาะเจ้าของและผู้ดูแลระบบ
+                </option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="description">คำอธิบาย</label>
+              <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>"
+                        id="description" name="description" rows="2" maxlength="500"><%= values.description || '' %></textarea>
+              <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="tags">แท็ก</label>
+              <input type="text" class="form-control <%= errors.tags ? 'is-invalid' : '' %>"
+                     id="tags" name="tags" value="<%= values.tags || '' %>">
+              <% if (errors.tags) { %><div class="invalid-feedback"><%= errors.tags %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="camera">กล้อง / อุปกรณ์</label>
+              <input type="text" class="form-control <%= errors.camera ? 'is-invalid' : '' %>"
+                     id="camera" name="camera" value="<%= values.camera || '' %>" maxlength="80">
+              <% if (errors.camera) { %><div class="invalid-feedback"><%= errors.camera %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="albumId">Album</label>
+              <select class="form-select" id="albumId" name="albumId">
+                <option value="">— ไม่อยู่ใน Album —</option>
+                <% albums.forEach((album) => { %>
+                  <option value="<%= album.id %>" <%= Number(values.album_id || values.albumId) === album.id ? 'selected' : '' %>>
+                    <%= album.name %> (<%= album.photo_count %> รูป)
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>บันทึกการแก้ไข</button>
+            <a class="btn btn-outline-secondary" href="/photo/<%= photo.id %>">ยกเลิก</a>
+            <%# ใช้ formaction เพื่อ POST ไปลบ (route ลบรูปรับเฉพาะ POST ไม่ใช่ GET) %>
+            <button type="submit" class="btn btn-outline-danger ms-auto"
+                    formaction="/photos/<%= photo.id %>/delete"
+                    onclick="return confirmDelete('ยืนยันการลบรูปนี้? การลบไม่สามารถย้อนกลับได้')">
+              <i class="bi bi-trash me-1"></i>ลบรูปนี้
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
