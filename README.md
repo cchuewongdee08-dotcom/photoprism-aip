@@ -282,3 +282,11 @@ curl -b cookie.txt -X POST http://localhost:3000/api/photos \
 - ยังไม่ได้ตั้งค่า HTTPS และ rate limit ของ session
 - ป้องกัน CSRF ด้วยการตรวจ `Origin` ของคำขอที่เปลี่ยนข้อมูล (คำขอจากโดเมนอื่นถูกปฏิเสธ 403)
   ร่วมกับ cookie `httpOnly` + `sameSite=lax` — ยังไม่ได้ใช้ CSRF token แบบเต็มรูปแบบ
+
+---
+
+## 12. ทีมพัฒนา
+
+- [@cchuewongdee08-dotcom](https://github.com/cchuewongdee08-dotcom)
+- [@I2kI7O](https://github.com/I2kI7O)
+- [@chyadakongsan](https://github.com/chyadakongsan)
