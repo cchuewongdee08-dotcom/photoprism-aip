@@ -4,6 +4,7 @@
     <a href="/photo/<%= photo.id %>" class="text-decoration-none text-reset">
       <div class="photo-thumb">
         <img src="/uploads/<%= photo.file_name %>" alt="<%= photo.title %>" loading="lazy">
+        <span class="photo-overlay"><i class="bi bi-eye-fill"></i></span>
         <% if (photo.visibility === 'private') { %>
           <span class="badge bg-dark position-absolute top-0 end-0 m-2">
             <i class="bi bi-lock-fill"></i> ส่วนตัว
