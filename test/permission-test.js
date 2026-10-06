@@ -273,6 +273,36 @@ async function login(client, username, password) {
       password: 'demo1234', confirmPassword: 'different',
     }).toString())).status, 400);
 
+  section('2.8 โปรไฟล์: แก้ชื่อตัวเองและเปลี่ยนรหัสผ่าน');
+  const demo = createClient();
+  check('POST /login บัญชีที่เพิ่งสมัคร (302)',
+    (await login(demo, `demo${stamp}`, 'demo1234')).status, 302);
+  check('GET /profile เปิดหน้าโปรไฟล์ได้ (200)', (await demo.get('/profile')).status, 200);
+  check('GET /profile ของ Guest ถูกพากลับหน้า Login (302)',
+    (await createClient().get('/profile')).status, 302);
+  check('POST /profile แก้ชื่อ-นามสกุล (302)',
+    (await demo.form('/profile', new URLSearchParams({
+      username: `demo${stamp}`, fullName: 'ชื่อที่แก้ไขแล้ว',
+    }).toString())).status, 302);
+  check('/api/auth/me แสดงชื่อใหม่ทันทีที่บันทึก',
+    (await demo.get('/api/auth/me')).body.user.fullName === 'ชื่อที่แก้ไขแล้ว', true);
+  check('POST /profile ใช้ชื่อที่ซ้ำกับ user1 (400)',
+    (await demo.form('/profile', new URLSearchParams({
+      username: 'user1', fullName: 'ชื่อที่แก้ไขแล้ว',
+    }).toString())).status, 400);
+  check('POST /profile/password ใส่รหัสปัจจุบันผิด (400)',
+    (await demo.form('/profile/password', new URLSearchParams({
+      currentPassword: 'wrongpass', newPassword: 'newpass123', confirmPassword: 'newpass123',
+    }).toString())).status, 400);
+  check('POST /profile/password เปลี่ยนรหัสสำเร็จ (302)',
+    (await demo.form('/profile/password', new URLSearchParams({
+      currentPassword: 'demo1234', newPassword: 'newpass123', confirmPassword: 'newpass123',
+    }).toString())).status, 302);
+  check('ล็อกอินด้วยรหัสใหม่ได้ (302)',
+    (await login(createClient(), `demo${stamp}`, 'newpass123')).status, 302);
+  check('รหัสเดิมใช้ล็อกอินไม่ได้แล้ว (401)',
+    (await login(createClient(), `demo${stamp}`, 'demo1234')).status, 401);
+
   // -------------------------------------------------------------
   section('3. ผู้ดูแลระบบ (admin)');
   const admin = createClient();
@@ -345,6 +375,33 @@ async function login(client, username, password) {
     (await fake.post('/api/admin/users', { body: { username: `esc${stamp}`, email: `e${stamp}@t.com`, password: 'demo1234', role: 'admin' } })).status, 403);
   check('หน้า /admin เปลี่ยน URL ตรง ๆ ก็เข้าไม่ได้ (403)', (await fake.get('/admin')).status, 403);
   check('GET /admin/logs เข้าไม่ได้ (403)', (await fake.get('/admin/logs')).status, 403);
+
+  section('3.5 Admin แก้ไขบัญชีผู้อื่น (ชื่อผู้ใช้ + รีเซ็ตรหัสผ่าน)');
+  const demoId = (await demo.get('/api/auth/me')).body.user.id;
+
+  check('User เรียก POST /admin/users/:id/edit ไม่ได้ (403)',
+    (await fake.post(`/admin/users/${demoId}/edit`, {
+      body: { username: 'hackname', fullName: 'ขโมยแก้ชื่อ' },
+    })).status, 403);
+
+  check('Admin แก้ชื่อผู้ใช้ + รีเซ็ตรหัสผ่าน (302)',
+    (await admin.form(`/admin/users/${demoId}/edit`, new URLSearchParams({
+      username: `renamed${stamp}`,
+      fullName: 'ชื่อใหม่โดยแอดมิน',
+      password: 'reset1234',
+    }).toString())).status, 302);
+
+  check('ล็อกอินด้วยชื่อใหม่ + รหัสใหม่ได้ (302)',
+    (await login(createClient(), `renamed${stamp}`, 'reset1234')).status, 302);
+  check('ชื่อเดิมใช้ล็อกอินไม่ได้แล้ว (401)',
+    (await login(createClient(), `demo${stamp}`, 'reset1234')).status, 401);
+
+  check('Admin แก้บัญชีตัวเองผ่านหน้า /admin/users ไม่ได้ (ระบบป้องกัน)',
+    (await admin.form('/admin/users/1/edit', new URLSearchParams({
+      username: 'hackedadmin', fullName: 'พยายามแก้เอง',
+    }).toString())).status, 302);
+  check('ชื่อแอดมินยังเป็น username เดิม',
+    (await admin.get('/api/auth/me')).body.user.username === 'admin', true);
 
   section('4. Logout และหน้าที่ไม่มีอยู่');
   check('POST /logout ออกจากระบบ (302)', (await user.form('/logout', '')).status, 302);

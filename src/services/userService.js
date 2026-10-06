@@ -8,7 +8,7 @@
  */
 
 const db = require('../db/database');
-const { hashPassword, toPublicUser } = require('./authService');
+const { hashPassword, verifyPassword, toPublicUser } = require('./authService');
 const { logAction } = require('./logService');
 
 class ServiceError extends Error {
@@ -157,6 +157,94 @@ function changeStatus(id, status, actor) {
   return toPublicUser(findById(id));
 }
 
+/**
+ * ผู้ใช้แก้โปรไฟล์ของตัวเอง (ชื่อผู้ใช้ + ชื่อ-นามสกุล)
+ * ตรวจชื่อซ้ำกับผู้อื่นที่ Server เสมอ
+ */
+async function updateProfile(id, values, actor) {
+  const target = findById(id);
+  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
+
+  const clash = existsByUsernameOrEmail({
+    username: values.username,
+    email: target.email,
+    excludeId: Number(id),
+  });
+  if (clash === 'username') throw new ServiceError('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว', 409);
+
+  db.run(
+    `UPDATE users SET username = :username, full_name = :fullName WHERE id = :id`,
+    { username: values.username, fullName: values.fullName, id: Number(id) }
+  );
+
+  logAction(actor, 'UPDATE_PROFILE', `${target.username} -> ${values.username}`);
+  return toPublicUser(findById(id));
+}
+
+/**
+ * เปลี่ยนรหัสผ่านของตัวเอง — ต้องทราบรหัสปัจจุบันก่อน
+ * (ต่างจาก Admin reset ที่ไม่ต้องใช้รหัสเก่า)
+ */
+async function changeOwnPassword(id, currentPassword, newPassword, actor) {
+  const target = findById(id);
+  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
+
+  const match = await verifyPassword(currentPassword, target.password_hash);
+  if (!match) throw new ServiceError('รหัสผ่านปัจจุบันไม่ถูกต้อง', 400);
+
+  const passwordHash = await hashPassword(newPassword);
+  db.run(`UPDATE users SET password_hash = :passwordHash WHERE id = :id`, {
+    passwordHash,
+    id: Number(id),
+  });
+
+  logAction(actor, 'CHANGE_PASSWORD', target.username);
+  return toPublicUser(findById(id));
+}
+
+/**
+ * Admin แก้บัญชีผู้อื่น — เปลี่ยนชื่อผู้ใช้ / ชื่อ-นามสกุล / รีเซ็ตรหัสผ่าน
+ * ป้องกัน: แก้บัญชีตัวเองผ่านหน้านี้ไม่ได้ (ต้องใช้หน้าโปรไฟล์)
+ */
+async function adminUpdateUser(id, values, actor) {
+  const target = findById(id);
+  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
+
+  if (actor && Number(actor.id) === Number(target.id)) {
+    throw new ServiceError('แก้ไขบัญชีของตัวเองผ่านหน้านี้ไม่ได้ กรุณาใช้หน้าโปรไฟล์');
+  }
+
+  const clash = existsByUsernameOrEmail({
+    username: values.username,
+    email: target.email,
+    excludeId: Number(id),
+  });
+  if (clash === 'username') throw new ServiceError('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว', 409);
+
+  const passwordHash = values.password ? await hashPassword(values.password) : null;
+
+  db.run(
+    `UPDATE users
+        SET username = :username,
+            full_name = :fullName,
+            password_hash = COALESCE(:passwordHash, password_hash)
+      WHERE id = :id`,
+    {
+      username: values.username,
+      fullName: values.fullName,
+      passwordHash,
+      id: Number(id),
+    }
+  );
+
+  logAction(
+    actor,
+    'ADMIN_EDIT_USER',
+    `${target.username} -> ${values.username}${values.password ? ' (รีเซ็ตรหัสผ่าน)' : ''}`
+  );
+  return toPublicUser(findById(id));
+}
+
 /** ลบผู้ใช้ (รูปภาพและ Album ของเขาจะถูกลบตาม ON DELETE CASCADE) */
 function deleteUser(id, actor) {
   const target = findById(id);
@@ -254,6 +342,9 @@ module.exports = {
   createUser,
   changeRole,
   changeStatus,
+  updateProfile,
+  changeOwnPassword,
+  adminUpdateUser,
   deleteUser,
   countAdmins,
   getStats,

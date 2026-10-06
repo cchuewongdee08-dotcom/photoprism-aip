@@ -98,6 +98,74 @@ function validateUserCreate(body = {}) {
   };
 }
 
+/** ตรวจข้อมูลโปรไฟล์ที่ผู้ใช้แก้เอง (ชื่อผู้ใช้ + ชื่อ-นามสกุล) */
+function validateProfile(body = {}) {
+  const values = { username: str(body.username), fullName: str(body.fullName) };
+  const errors = {};
+
+  if (!values.username) {
+    errors.username = 'กรุณากรอกชื่อผู้ใช้';
+  } else if (!USERNAME_RE.test(values.username)) {
+    errors.username = 'ชื่อผู้ใช้ต้องเป็น A-Z, a-z, 0-9 หรือ _ ความยาว 3-20 ตัว';
+  }
+
+  if (values.fullName.length > 100) {
+    errors.fullName = 'ชื่อ-นามสกุลยาวเกิน 100 ตัวอักษร';
+  }
+
+  return { isValid: Object.keys(errors).length === 0, errors, values };
+}
+
+/** ตรวจการเปลี่ยนรหัสผ่านด้วยตัวเอง (ต้องทราบรหัสปัจจุบันก่อน) */
+function validatePasswordChange(body = {}) {
+  const values = {
+    currentPassword: str(body.currentPassword),
+    newPassword: str(body.newPassword),
+    confirmPassword: str(body.confirmPassword),
+  };
+  const errors = {};
+
+  if (!values.currentPassword) errors.currentPassword = 'กรุณากรอกรหัสผ่านปัจจุบัน';
+
+  if (!values.newPassword) {
+    errors.newPassword = 'กรุณากรอกรหัสผ่านใหม่';
+  } else if (values.newPassword.length < 6) {
+    errors.newPassword = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+  } else if (values.newPassword.length > 72) {
+    errors.newPassword = 'รหัสผ่านยาวเกิน 72 ตัวอักษร';
+  } else if (values.newPassword === values.currentPassword) {
+    errors.newPassword = 'รหัสผ่านใหม่ต้องต่างจากรหัสผ่านปัจจุบัน';
+  }
+
+  if (!values.confirmPassword) {
+    errors.confirmPassword = 'กรุณายืนยันรหัสผ่านใหม่';
+  } else if (values.confirmPassword !== values.newPassword) {
+    errors.confirmPassword = 'รหัสผ่านทั้งสองไม่ตรงกัน';
+  }
+
+  return { isValid: Object.keys(errors).length === 0, errors, values };
+}
+
+/**
+ * ตรวจข้อมูลที่ Admin ใช้แก้บัญชีผู้อื่น
+ * - ชื่อผู้ใช้ / ชื่อ-นามสกุล บังคับเหมือน validateProfile
+ * - รหัสผ่านใหม่ "ไม่บังคับ" (เว้นว่าง = ไม่เปลี่ยนรหัส)
+ */
+function validateUserEdit(body = {}) {
+  const profile = validateProfile(body);
+  const password = str(body.password);
+  const errors = { ...profile.errors };
+
+  if (password && password.length < 6) errors.password = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+  if (password && password.length > 72) errors.password = 'รหัสผ่านยาวเกิน 72 ตัวอักษร';
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    values: { ...profile.values, password },
+  };
+}
+
 function validateRole(body = {}) {
   const role = str(body.role);
   const errors = {};
@@ -221,6 +289,9 @@ module.exports = {
   validateLogin,
   validateRegister,
   validateUserCreate,
+  validateProfile,
+  validatePasswordChange,
+  validateUserEdit,
   validateRole,
   validateStatus,
   validateAlbum,

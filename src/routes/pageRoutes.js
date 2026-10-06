@@ -18,7 +18,8 @@ const express = require('express');
 const config = require('../config');
 const photoService = require('../services/photoService');
 const albumService = require('../services/albumService');
-const { validateAlbum, validatePhoto, toInt } = require('../services/validation');
+const userService = require('../services/userService');
+const { validateAlbum, validatePhoto, validateProfile, validatePasswordChange, toInt } = require('../services/validation');
 const { requireAuthPage } = require('../middleware/auth');
 const { withUpload, deleteUploadedFile } = require('../utils/storage');
 const { DEMO_ENDPOINTS } = require('./demoEndpoints');
@@ -287,6 +288,64 @@ router.post('/albums/:id/delete', requireAuthPage, (req, res, next) => {
     const album = albumService.deleteAlbum(req.params.id, req.user);
     flash(req, 'success', `ลบ Album "${album.name}" เรียบร้อยแล้ว (รูปภาพยังอยู่ในระบบ)`);
     return res.redirect('/albums');
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// ---------------------------------------------------------------
+// โปรไฟล์ของฉัน (แก้ชื่อผู้ใช้ / ชื่อ-นามสกุล / เปลี่ยนรหัสผ่าน)
+// ---------------------------------------------------------------
+function renderProfile(req, res, status, payload = {}) {
+  return res.status(status).render('pages/profile', {
+    title: 'โปรไฟล์ของฉัน',
+    profileErrors: {},
+    profileValues: { username: req.user.username, fullName: req.user.fullName },
+    passwordErrors: {},
+    ...payload,
+  });
+}
+
+router.get('/profile', requireAuthPage, (req, res) => renderProfile(req, res, 200));
+
+router.post('/profile', requireAuthPage, async (req, res, next) => {
+  try {
+    const { isValid, errors, values } = validateProfile(req.body);
+
+    if (isValid) {
+      try {
+        await userService.updateProfile(req.user.id, values, req.user);
+        flash(req, 'success', 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว');
+        return res.redirect('/profile');
+      } catch (error) {
+        // ชื่อผู้ใช้ซ้ำกับคนอื่น -> แสดงข้อความในฟอร์มเดิม ไม่ใช่หน้า error
+        if (error.status === 409) errors.username = error.message;
+        else throw error;
+      }
+    }
+
+    return renderProfile(req, res, 400, { profileErrors: errors, profileValues: values });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/profile/password', requireAuthPage, async (req, res, next) => {
+  try {
+    const { isValid, errors, values } = validatePasswordChange(req.body);
+
+    if (isValid) {
+      try {
+        await userService.changeOwnPassword(req.user.id, values.currentPassword, values.newPassword, req.user);
+        flash(req, 'success', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว — ใช้รหัสใหม่ในการเข้าสู่ระบบครั้งต่อไป');
+        return res.redirect('/profile');
+      } catch (error) {
+        if (error.status === 400) errors.currentPassword = error.message;
+        else throw error;
+      }
+    }
+
+    return renderProfile(req, res, 400, { passwordErrors: errors });
   } catch (error) {
     return next(error);
   }

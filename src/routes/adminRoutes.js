@@ -13,7 +13,7 @@ const express = require('express');
 const config = require('../config');
 const userService = require('../services/userService');
 const photoService = require('../services/photoService');
-const { validateUserCreate, validateRole, validateStatus, toInt } = require('../services/validation');
+const { validateUserCreate, validateUserEdit, validateRole, validateStatus, toInt } = require('../services/validation');
 const { requireAuthPage, requireAdminPage } = require('../middleware/auth');
 
 const router = express.Router();
@@ -121,6 +121,31 @@ router.post('/users/:id/status', (req, res, next) => {
     );
     return res.redirect('/admin/users');
   } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/users/:id/edit', async (req, res, next) => {
+  try {
+    const { isValid, errors, values } = validateUserEdit(req.body);
+
+    if (!isValid) {
+      flash(req, 'danger', errors.username || errors.fullName || errors.password || 'ข้อมูลไม่ถูกต้อง');
+      return res.redirect('/admin/users');
+    }
+
+    const updated = await userService.adminUpdateUser(req.params.id, values, req.user);
+    flash(
+      req,
+      'success',
+      `แก้ไขบัญชี "${updated.username}" เรียบร้อย${values.password ? ' (รีเซ็ตรหัสผ่านแล้ว)' : ''}`
+    );
+    return res.redirect('/admin/users');
+  } catch (error) {
+    if (error.status && error.status < 500) {
+      flash(req, 'danger', error.message);
+      return res.redirect('/admin/users');
+    }
     return next(error);
   }
 });

@@ -4,7 +4,8 @@
   <div>
     <h4 class="mb-1"><i class="bi bi-people me-2"></i>จัดการผู้ใช้</h4>
     <p class="text-muted small mb-0">
-      สิทธิ์ระดับ Admin เท่านั้น — เพิ่มผู้ใช้ เปลี่ยนสิทธิ์ (User/Admin) ระงับหรือเปิดบัญชี และลบผู้ใช้ได้
+      สิทธิ์ระดับ Admin เท่านั้น — เพิ่มผู้ใช้ แก้ชื่อผู้ใช้/ชื่อ-นามสกุล รีเซ็ตรหัสผ่าน
+      เปลี่ยนสิทธิ์ (User/Admin) ระงับหรือเปิดบัญชี และลบผู้ใช้ได้
     </p>
   </div>
   <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
@@ -48,7 +49,7 @@
           <th>สถานะ</th>
           <th class="text-center">รูป / Album</th>
           <th>สมัครเมื่อ</th>
-          <th class="text-center" style="width: 300px">จัดการ (สิทธิ์ Admin)</th>
+          <th class="text-center" style="width: 360px">จัดการ (สิทธิ์ Admin)</th>
         </tr>
       </thead>
       <tbody>
@@ -92,6 +93,12 @@
                 </div>
               <% } else { %>
                 <div class="d-flex flex-wrap justify-content-center gap-1">
+                  <button class="btn btn-sm btn-outline-primary" type="button"
+                          data-bs-toggle="modal" data-bs-target="#editUserModal-<%= user.id %>"
+                          title="แก้ชื่อผู้ใช้ / ชื่อ-นามสกุล / รีเซ็ตรหัสผ่าน">
+                    <i class="bi bi-pencil me-1"></i>แก้ไข
+                  </button>
+
                   <form method="post" action="/admin/users/<%= user.id %>/role" class="d-inline">
                     <input type="hidden" name="role" value="<%= user.role === 'admin' ? 'user' : 'admin' %>">
                     <button class="btn btn-sm btn-outline-<%= user.role === 'admin' ? 'warning' : 'dark' %>" type="submit"
@@ -200,5 +207,51 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: แก้ไขผู้ใช้ (สร้างทีละคนตามที่แสดงในตาราง) -->
+<% users.forEach((user) => { %>
+  <% if (user.id === currentUser.id) return; %>
+  <div class="modal fade" id="editUserModal-<%= user.id %>" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="/admin/users/<%= user.id %>/edit" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-pencil-square me-2"></i>แก้ไขบัญชี <code><%= user.username %></code>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label" for="editUsername-<%= user.id %>">ชื่อผู้ใช้ (ใช้ล็อกอิน) *</label>
+              <input type="text" class="form-control" id="editUsername-<%= user.id %>"
+                     name="username" value="<%= user.username %>" maxlength="20"
+                     pattern="[A-Za-z0-9_]{3,20}" required>
+              <div class="form-text">เปลี่ยนแล้วผู้ใช้คนนี้ต้องล็อกอินด้วยชื่อใหม่</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="editFullName-<%= user.id %>">ชื่อ-นามสกุล</label>
+              <input type="text" class="form-control" id="editFullName-<%= user.id %>"
+                     name="fullName" value="<%= user.fullName %>" maxlength="100">
+            </div>
+            <div class="mb-1">
+              <label class="form-label" for="editPassword-<%= user.id %>">รหัสผ่านใหม่ (รีเซ็ต)</label>
+              <input type="password" class="form-control" id="editPassword-<%= user.id %>"
+                     name="password" minlength="6" placeholder="เว้นว่างถ้าไม่ต้องการเปลี่ยน">
+              <div class="form-text">
+                <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                ไม่ต้องทราบรหัสเดิม — เหมาะกับกรณีผู้ใช้ลืมรหัสผ่าน
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>บันทึก</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
 
 <%- include('../partials/footer') %>

@@ -21,20 +21,57 @@ const { imageSize } = require('image-size');
 const RESET = process.argv.includes('--reset');
 
 // ---------------------------------------------------------------
+// รูปภาพตัวอย่าง — ประกาศไว้ตอนบน เพราะใช้ตอนอ่านไฟล์เดิมระหว่าง reset
+// ---------------------------------------------------------------
+const PHOTOS = [
+  { file: 'mountain.jpg',   owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'ดอยอินทนากร ช่วงพระอาทิตย์ขึ้น', description: 'ถ่ายตอน 6 โมงเช้า อากาศเย็นกำลังดี', tags: 'ภูเขา, ทริป, ธรรมชาติ', camera: 'Canon EOS R50', visibility: 'public' },
+  { file: 'waterfall.jpg',  owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'น้ำตกแจ้มหลังฝนตก',            description: 'น้ำตกสวยมาก น้ำไหลเย็นมาก',           tags: 'น้ำตก, ทริป, ธรรมชาติ', camera: 'Canon EOS R50', visibility: 'public' },
+  { file: 'river.jpg',      owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'แม่น้ำโขงยามเย็น',              description: 'แสงสีทองตอนเย็นสวยมาก',              tags: 'แม่น้ำ, ทริป',                  camera: 'iPhone 15',      visibility: 'public' },
+  { file: 'oldtown.jpg',    owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'ตรอกเก่าเชียงราย (ส่วนตัว)',      description: 'ภาพนี้ตั้งเป็นส่วนตัว ไม่แสดงต่อสาธารณะ', tags: 'เมืองเก่า',              camera: 'iPhone 15',      visibility: 'private' },
+  { file: 'dessert.jpg',    owner: 'user1', album: 'user1:ขนมไทย',       title: 'ขนมไทยหน้าเตียน',                description: 'ถ่ายตอนร้านยามเย็น แสงสวย',         tags: 'ขนม, อาหาร',                  camera: 'Samsung S23',    visibility: 'public' },
+  { file: 'cat.jpg',        owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'แมวนอนตากแดด',                   description: 'นอนเต็มที่เลยจนขี้เกียจตื่น',        tags: 'แมว, สัตว์เลี้ยง',             camera: 'iPhone 15',      visibility: 'public' },
+  { file: 'dog.jpg',        owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'สุนัขในสวนบ้าน',                 description: 'วันหยุดเล่นในสวน',                   tags: 'สุนัข, สัตว์เลี้ยง, สวน',       camera: 'iPhone 15',      visibility: 'public' },
+  { file: 'bird.jpg',       owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'นกกระเรียนบิน (ส่วนตัว)',           description: 'เผยแพร่เป็นส่วนตัว',                tags: 'นก, ธรรมชาติ',                camera: 'Sony A6400',     visibility: 'private' },
+];
+
+/** ชื่อรูปตัวอย่าง -> ไฟล์ที่ database เดิมชี้อยู่ (ใช้ไฟล์เดิมซ้ำ ไม่ดาวน์โหลดใหม่) */
+const REUSE_FILES = new Map();
+
+// ---------------------------------------------------------------
 // เตรียมโฟลเดอร์ / ล้างข้อมูลเดิม
 // ---------------------------------------------------------------
 fs.mkdirSync(path.dirname(config.dbFile), { recursive: true });
 fs.mkdirSync(config.paths.uploads, { recursive: true });
 
+/** อ่านรายชื่อรูปจาก database เดิมก่อนลบ เพื่อใช้ไฟล์เดิมซ้ำ (ไฟล์รูปไม่ถูกแตะต้อง) */
+function collectReuseFiles() {
+  if (!fs.existsSync(config.dbFile)) return;
+
+  try {
+    const { DatabaseSync } = require('node:sqlite');
+    const oldDb = new DatabaseSync(config.dbFile);
+    const rows = oldDb.prepare('SELECT original_name, file_name FROM photos').all();
+    oldDb.close();
+
+    const seedNames = new Set(PHOTOS.map((p) => p.file));
+    for (const row of rows) {
+      if (seedNames.has(row.original_name)) REUSE_FILES.set(row.original_name, row.file_name);
+    }
+  } catch (error) {
+    console.warn(`  ! อ่านฐานข้อมูลเดิมไม่ได้ (${error.message}) — จะดาวน์โหลดรูปตัวอย่างใหม่`);
+  }
+}
+
 if (RESET) {
-  console.log('กำลังล้างฐานข้อมูลและไฟล์รูปเดิม ...');
+  collectReuseFiles();
+
+  const kept = fs.readdirSync(config.paths.uploads).filter((f) => f !== '.gitkeep').length;
+  console.log('กำลังล้างฐานข้อมูล ...');
+  console.log(`  เก็บไฟล์รูปไว้ทั้งหมด ${kept} ไฟล์ (ไม่ลบไฟล์ใน public/uploads — รูปที่อัปโหลดเองยังอยู่)`);
+
   for (const suffix of ['', '-shm', '-wal']) {
     const file = config.dbFile + suffix;
     if (fs.existsSync(file)) fs.unlinkSync(file);
-  }
-  for (const file of fs.readdirSync(config.paths.uploads)) {
-    if (file === '.gitkeep') continue;
-    fs.unlinkSync(path.join(config.paths.uploads, file));
   }
 }
 
@@ -92,20 +129,6 @@ function seedAlbums(userIds) {
   return ids;
 }
 
-// ---------------------------------------------------------------
-// 3) รูปภาพตัวอย่าง (ดาวน์โหลดครั้งเดียว เก็บไฟล์ไว้ในเครื่อง)
-// ---------------------------------------------------------------
-const PHOTOS = [
-  { file: 'mountain.jpg',   owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'ดอยอินทนากร ช่วงพระอาทิตย์ขึ้น', description: 'ถ่ายตอน 6 โมงเช้า อากาศเย็นกำลังดี', tags: 'ภูเขา, ทริป, ธรรมชาติ', camera: 'Canon EOS R50', visibility: 'public' },
-  { file: 'waterfall.jpg',  owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'น้ำตกแจ้มหลังฝนตก',            description: 'น้ำตกสวยมาก น้ำไหลเย็นมาก',           tags: 'น้ำตก, ทริป, ธรรมชาติ', camera: 'Canon EOS R50', visibility: 'public' },
-  { file: 'river.jpg',      owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'แม่น้ำโขงยามเย็น',              description: 'แสงสีทองตอนเย็นสวยมาก',              tags: 'แม่น้ำ, ทริป',                  camera: 'iPhone 15',      visibility: 'public' },
-  { file: 'oldtown.jpg',    owner: 'user1', album: 'user1:ทริปภาคเหนือ', title: 'ตรอกเก่าเชียงราย (ส่วนตัว)',      description: 'ภาพนี้ตั้งเป็นส่วนตัว ไม่แสดงต่อสาธารณะ', tags: 'เมืองเก่า',              camera: 'iPhone 15',      visibility: 'private' },
-  { file: 'dessert.jpg',    owner: 'user1', album: 'user1:ขนมไทย',       title: 'ขนมไทยหน้าเตียน',                description: 'ถ่ายตอนร้านยามเย็น แสงสวย',         tags: 'ขนม, อาหาร',                  camera: 'Samsung S23',    visibility: 'public' },
-  { file: 'cat.jpg',        owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'แมวนอนตากแดด',                   description: 'นอนเต็มที่เลยจนขี้เกียจตื่น',        tags: 'แมว, สัตว์เลี้ยง',             camera: 'iPhone 15',      visibility: 'public' },
-  { file: 'dog.jpg',        owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'สุนัขในสวนบ้าน',                 description: 'วันหยุดเล่นในสวน',                 tags: 'สุนัข, สัตว์เลี้ยง, สวน',       camera: 'iPhone 15',      visibility: 'public' },
-  { file: 'bird.jpg',       owner: 'user2', album: 'user2:สัตว์เลี้ยง',    title: 'นกกระเรียนบิน (ส่วนตัว)',           description: 'เผยแพร่เป็นส่วนตัว',                tags: 'นก, ธรรมชาติ',                camera: 'Sony A6400',     visibility: 'private' },
-];
-
 const EXTENSION_BY_MIME = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -137,17 +160,53 @@ async function downloadSample(fileName) {
   };
 }
 
+/**
+ * ใช้ไฟล์รูปตัวอย่างที่มีอยู่แล้ว (ไม่ดาวน์โหลดซ้ำ)
+ * เกิดขึ้นเมื่อ reset — ไฟล์เดิมยังอยู่ใน public/uploads จึงหยิบกลับมาใช้ได้เลย
+ */
+function reuseSample(originalName) {
+  const storedName = REUSE_FILES.get(originalName);
+  if (!storedName) return null;
+
+  const target = path.join(config.paths.uploads, storedName);
+  if (!fs.existsSync(target)) return null;
+
+  const buffer = fs.readFileSync(target);
+  const { width, height } = imageSize(buffer);
+
+  const mimeByExt = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+  };
+
+  return {
+    fileName: storedName,
+    mimeType: mimeByExt[path.extname(storedName).toLowerCase()] || 'image/jpeg',
+    fileSize: buffer.length,
+    width,
+    height,
+  };
+}
+
 async function seedPhotos(userIds, albumIds) {
   let created = 0;
 
   for (const p of PHOTOS) {
-    let file;
-    try {
-      file = await downloadSample(p.file);
-      console.log(`  + ดาวน์โหลดรูป ${p.title}`);
-    } catch (error) {
-      console.warn(`  ! โหลดรูป "${p.title}" ไม่สำเร็จ (${error.message}) — ข้ามรูปนี้`);
-      continue;
+    let file = reuseSample(p.file);
+
+    if (file) {
+      console.log(`  + ใช้ไฟล์เดิม ${p.title} (ไม่ดาวน์โหลดซ้ำ)`);
+    } else {
+      try {
+        file = await downloadSample(p.file);
+        console.log(`  + ดาวน์โหลดรูป ${p.title}`);
+      } catch (error) {
+        console.warn(`  ! โหลดรูป "${p.title}" ไม่สำเร็จ (${error.message}) — ข้ามรูปนี้`);
+        continue;
+      }
     }
 
     db.run(
