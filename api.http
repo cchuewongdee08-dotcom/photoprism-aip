@@ -1,15 +1,19 @@
 # ============================================================
-#  PhotoPrism — REST API v1 (ยิงทดสอบได้เลยใน VS Code)
+#  PhotoPrism AIP — REST API v1 (ยิงทดสอบใน VS Code)
 # ============================================================
 #
-#  วิธีใช้ (ครั้งเดียว)
+#  วิธีใช้
 #  1) เปิดเซิร์ฟเวอร์ก่อน :  npm start
 #  2) ติดตั้ง Extension :     REST Client (humao.rest-client)
 #  3) ค่า URL / บัญชี อ่านจากไฟล์ .env อัตโนมัติ
-#  4) กด "Send Request" เหนือบรรทัด POST/GET ที่ต้องการ
+#  4) กด "Send Request" เหนือคำขอที่ต้องการ
 #
-#  ลำดับที่แนะนำ : สมัคร -> เข้าสู่ระบบ -> คำขอที่ต้องใช้ token
-#  "เข้าสู่ระบบ" จะเก็บ token ไว้ใน @token ให้คำขอถัดไปใช้ต่อทันที
+#  เรื่อง Session (สำคัญ)
+#  ระบบใช้ express-session + cookie ชื่อ "photoprism.sid"
+#  REST Client เปิด `rest-client.rememberCookiesForSubsequentRequests`
+#  ไว้ (default = true) ดังนั้น "กด Login ครั้งเดียว"
+#  แล้วคำขอถัดไปในไฟล์นี้จะส่ง cookie เดิมไปให้โดยอัตโนมัติ
+#  จึงไม่จำเป็นต้องคัดลอก token เอง
 # ============================================================
 
 
@@ -19,39 +23,18 @@
 @baseUrl  = {{$dotenv PHOTOPRISM_URL}}
 @username = {{$dotenv PHOTOPRISM_USERNAME}}
 @password = {{$dotenv PHOTOPRISM_PASSWORD}}
-
-# ข้อมูลสำหรับทดสอบสมัครสมาชิก
-@signupUsername = {{$dotenv PHOTOPRISM_SIGNUP_USERNAME}}
-@signupEmail    = {{$dotenv PHOTOPRISM_SIGNUP_EMAIL}}
-@signupPassword = {{$dotenv PHOTOPRISM_SIGNUP_PASSWORD}}
-
-# รหัสผ่านใหม่สำหรับทดสอบเปลี่ยนรหัส
-@newPassword = {{$dotenv PHOTOPRISM_NEW_PASSWORD}}
+@adminUsername = {{$dotenv PHOTOPRISM_ADMIN_USERNAME}}
+@adminPassword = {{$dotenv PHOTOPRISM_ADMIN_PASSWORD}}
 
 
 # ============================================================
-#  1) สมัครสมาชิก
+#  1. เข้าสู่ระบบ
+# ============================================================
+#  ถูกต้อง -> 200 (และเซ็ต cookie ให้ใช้กับคำขอถัดไป)
+#  รหัสผิด -> 401
 # ============================================================
 
-### สมัครสมาชิก (ได้สิทธิ์ user)
-POST {{baseUrl}}/api/v1/register
-Content-Type: application/json
-
-{
-  "username": "{{signupUsername}}",
-  "email": "{{signupEmail}}",
-  "password": "{{signupPassword}}",
-  "confirmPassword": "{{signupPassword}}",
-  "fullName": "ผู้ใช้ทดสอบ"
-}
-
-
-# ============================================================
-#  2) เข้าสู่ระบบ  (เก็บ token อัตโนมัติ)
-# ============================================================
-
-### เข้าสู่ระบบ
-# @name login
+### 1. เข้าสู่ระบบ
 POST {{baseUrl}}/api/v1/session
 Content-Type: application/json
 
@@ -60,68 +43,106 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-# เก็บ token จาก response มาใช้กับคำขอถัดไป
-@token = {{login.response.body.$.token}}
+# ============================================================
+#  2. ดูรูปที่ฉันอัปโหลด
+# ============================================================
+#  ใช้ session เดียวกับที่ Login (ต้องรันข้อ 1 ก่อน)
+#  ยังไม่ Login -> 401
+#  Login แล้ว   -> 200 (เห็นเฉพาะรูปของตัวเอง)
+# ============================================================
+
+### 2. ดูรูปที่ฉันอัปโหลด
+GET {{baseUrl}}/api/v1/my-uploads
+Accept: application/json
 
 
 # ============================================================
-#  3) ดูผู้ใช้ปัจจุบัน + เปลี่ยนรหัสผ่าน
+#  3. ดูรูปภาพทั้งหมด
+# ============================================================
+#  page  = หน้าที่ต้องการ
+#  limit = จำนวนรูปต่อหน้า (สูงสุด 30)
 # ============================================================
 
-### ดูผู้ใช้ปัจจุบัน (ตรวจว่า token ใช้ได้)
+### 3. ดูรูปภาพทั้งหมด
+GET {{baseUrl}}/api/v1/photos?page=1&limit=9
+Accept: application/json
+
+
+# ============================================================
+#  4. ค้นหารูปภาพ
+# ============================================================
+#  q = คำค้นหา (ค้นจากชื่อรูป คำอธิบาย แท็ก กล้อง ชื่อผู้ใช้)
+# ============================================================
+
+### 4. ค้นหารูปภาพ
+GET {{baseUrl}}/api/v1/photos?q=แมว&page=1&limit=9
+Accept: application/json
+
+
+# ============================================================
+#  5. สมัครสมาชิก
+# ============================================================
+
+### 5. สมัครสมาชิก (ได้สิทธิ์ user)
+POST {{baseUrl}}/api/v1/register
+Content-Type: application/json
+
+{
+  "username": "newmember",
+  "email": "newmember@example.com",
+  "password": "123456",
+  "confirmPassword": "123456",
+  "fullName": "สมาชิกใหม่"
+}
+
+
+# ============================================================
+#  6. ตรวจสอบ / ออกจากระบบ
+# ============================================================
+
+### 6.1 ดูผู้ใช้ปัจจุบัน (ใช้ session เดิม)
 GET {{baseUrl}}/api/v1/session
-Authorization: Bearer {{token}}
+Accept: application/json
 
-### เปลี่ยนรหัสผ่านของตัวเอง
+### 6.2 ออกจากระบบ
+DELETE {{baseUrl}}/api/v1/session
+
+
+# ============================================================
+#  7. เปลี่ยนรหัสผ่านของตัวเอง
+# ============================================================
+
+### 7. เปลี่ยนรหัสผ่าน
 PATCH {{baseUrl}}/api/v1/account/password
-Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "currentPassword": "{{password}}",
-  "newPassword": "{{newPassword}}",
-  "confirmPassword": "{{newPassword}}"
+  "newPassword": "654321",
+  "confirmPassword": "654321"
 }
 
-### ออกจากระบบ
-DELETE {{baseUrl}}/api/v1/session
-Authorization: Bearer {{token}}
-
 
 # ============================================================
-#  4) รูปภาพ
+#  8. รายละเอียดรูป / อัลบั้ม
 # ============================================================
 
-### ดึงรายการรูปภาพ (page, count)
-GET {{baseUrl}}/api/v1/photos?page=1&count=9
-Authorization: Bearer {{token}}
-
-### ค้นหารูปภาพ (q = คำค้นหา)
-GET {{baseUrl}}/api/v1/photos?q=sea&page=1&count=9
-Authorization: Bearer {{token}}
-
-### ดูรายละเอียดรูปภาพ (แก้เลข 1 เป็น id ที่ต้องการ)
+### 8.1 ดูรายละเอียดรูปภาพ (แก้เลข 1 เป็น id ที่ต้องการ)
 GET {{baseUrl}}/api/v1/photos/1
-Authorization: Bearer {{token}}
+Accept: application/json
 
-
-# ============================================================
-#  5) อัลบั้ม
-# ============================================================
-
-### ดึงรายการอัลบั้ม
+### 8.2 ดึงรายการอัลบั้ม (ต้อง Login)
 GET {{baseUrl}}/api/v1/albums
-Authorization: Bearer {{token}}
 
 
 # ============================================================
-#  6) ฝั่งผู้ดูแลระบบ (Admin) — บัญชีใน .env ต้องเป็น admin
+#  9. ฝั่งผู้ดูแลระบบ (Admin)
+# ============================================================
+#  ต้องรันข้อ 1 ด้วยบัญชี admin ก่อน (แก้ค่าใน .env)
 # ============================================================
 
-### สถิติระบบ
+### 9.1 สถิติระบบ
 GET {{baseUrl}}/api/v1/admin/stats
-Authorization: Bearer {{token}}
 
-### รายชื่อผู้ใช้ทั้งหมด
+### 9.2 รายชื่อผู้ใช้ทั้งหมด
 GET {{baseUrl}}/api/v1/admin/users?page=1
-Authorization: Bearer {{token}}

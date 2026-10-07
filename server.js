@@ -16,8 +16,8 @@ const server = app.listen(config.port, () => {
   console.log(`  ${config.appName} ระบบจัดการรูปภาพ`);
   console.log(line);
   console.log(`  เว็บไซต์      : http://localhost:${config.port}`);
-  console.log('  ทดลองเข้าระบบ : admin / admin123   (สิทธิ์ Admin)');
-  console.log('                user1 / user123   (สิทธิ์ User)');
+
+
   console.log('  กด Ctrl+C เพื่อปิดเซิร์ฟเวอร์');
   console.log(line);
 });
