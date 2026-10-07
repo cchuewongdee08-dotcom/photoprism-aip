@@ -7,8 +7,8 @@
   --pp-primary-dark: #4338ca;
   --pp-accent: #7c3aed;
   --pp-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --pp-bg: #f4f6fc;
-  --pp-surface: #ffffff;
+  --pp-bg: #e9e1fb;
+  --pp-surface: #f4efff;
   --pp-heading: #0f172a;
   --pp-text: #334155;
   --pp-muted: #64748b;
@@ -199,6 +199,14 @@ main {
   background: var(--pp-gradient);
   color: #fff;
   font-size: 0.85rem;
+  overflow: hidden;
+}
+
+.nav-user-chip .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 /* ---------- การ์ดทั่วไป ---------- */
@@ -210,7 +218,7 @@ main {
 }
 
 .card-header {
-  background: linear-gradient(180deg, #fbfcff 0%, #f6f7fc 100%);
+  background: linear-gradient(180deg, #f7f4ff 0%, #efeafc 100%);
   border-bottom: 1px solid var(--pp-border);
   border-radius: var(--pp-radius-lg) var(--pp-radius-lg) 0 0 !important;
   font-weight: 600;
@@ -219,9 +227,10 @@ main {
 }
 
 .card-body { padding: 1.35rem; }
-.card-footer { background: #fbfcff; border-top: 1px solid var(--pp-border); }
+.card-footer { background: #f5f1ff; border-top: 1px solid var(--pp-border); }
 
 .list-group-item {
+  background-color: var(--pp-surface);
   border-color: var(--pp-border);
   padding: 0.9rem 1.35rem;
 }
@@ -401,9 +410,9 @@ main {
 }
 
 .badge.bg-light.text-dark.border {
-  background: #f1f5f9 !important;
+  background: #ece4ff !important;
   border: 0;
-  color: #475569 !important;
+  color: #5b4b8a !important;
 }
 
 /* ---------- ฟอร์ม ---------- */
@@ -412,7 +421,7 @@ main {
   border-color: #e2e8f0;
   border-radius: 11px;
   padding: 0.58rem 0.95rem;
-  background-color: #fbfcff;
+  background-color: #f7f2ff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
@@ -420,7 +429,7 @@ main {
 
 .form-control:focus,
 .form-select:focus {
-  background-color: #fff;
+  background-color: #f4efff;
   border-color: rgba(79, 70, 229, 0.55);
   box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
 }
@@ -440,8 +449,8 @@ main {
 .table > :not(caption) > * > * { vertical-align: middle; }
 
 .table thead th {
-  background: #f8fafc;
-  color: #475569;
+  background: #f0eaff;
+  color: #5b4b8a;
   font-size: 0.83rem;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -466,7 +475,7 @@ main {
 .page-link {
   border-radius: 12px !important;
   border: 1px solid var(--pp-border);
-  background: #fff;
+  background: #f7f2ff;
   color: var(--pp-primary);
   font-weight: 500;
   margin: 0 1px;
@@ -479,7 +488,7 @@ main {
   box-shadow: 0 10px 20px -12px rgba(79, 70, 229, 0.9);
 }
 
-.page-item.disabled .page-link { background: #f8fafc; color: #cbd5e1; box-shadow: none; }
+.page-item.disabled .page-link { background: #ece4ff; color: #a5a0c0; box-shadow: none; }
 
 /* ---------- Alert ---------- */
 .alert {
@@ -502,7 +511,7 @@ main {
 }
 
 .modal-header {
-  background: linear-gradient(180deg, #fbfcff, #f6f7fc);
+  background: linear-gradient(180deg, #f7f4ff, #efeafc);
   border-bottom: 1px solid var(--pp-border);
 }
 
@@ -512,7 +521,7 @@ main {
 .app-footer {
   margin-top: 4rem;
   padding: 2rem 0;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(244, 239, 255, 0.8);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--pp-border);
   color: var(--pp-muted);
@@ -544,6 +553,28 @@ main {
   margin-bottom: 0.75rem;
 }
 
+/* ---------- รูปโปรไฟล์ ---------- */
+.profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(124, 58, 237, 0.16));
+  color: var(--pp-primary);
+  font-size: 2.6rem;
+  box-shadow: var(--pp-shadow-sm);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* ---------- ป้ายวิธีใช้ HTTP ในหน้าทดสอบสิทธิ์ ---------- */
 .method-badge {
   font-family: ui-monospace, 'Cascadia Mono', monospace;
@@ -558,7 +589,7 @@ main {
 .method-delete { background-color: #ef4444 !important; color: #fff; }
 
 code {
-  background-color: #eef1f8;
+  background-color: #ece4ff;
   color: #4338ca;
   padding: 0.12rem 0.4rem;
   border-radius: 6px;
@@ -578,7 +609,7 @@ pre code { background: transparent; color: inherit; padding: 0; }
 
 /* ---------- Misc ---------- */
 .breadcrumb {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(244, 239, 255, 0.85);
   border: 1px solid var(--pp-border);
   border-radius: 999px;
   padding: 0.45rem 0.95rem;

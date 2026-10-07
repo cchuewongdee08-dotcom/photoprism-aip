@@ -38,6 +38,7 @@ function toPublicUser(row) {
     username: row.username,
     email: row.email,
     fullName: row.full_name,
+    avatar: row.avatar || '',
     role: row.role,
     status: row.status,
     createdAt: row.created_at,

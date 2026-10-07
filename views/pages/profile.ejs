@@ -12,6 +12,40 @@
           · แก้ไขได้เฉพาะบัญชีของตัวเอง — ระบบจะตรวจชื่อซ้ำและรหัสผ่านที่ Server เสมอ
         </p>
 
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4 pb-4 border-bottom">
+          <div class="profile-avatar">
+            <% if (currentUser.avatar) { %>
+              <img src="/uploads/<%= currentUser.avatar %>" alt="รูปโปรไฟล์">
+            <% } else { %>
+              <i class="bi bi-person"></i>
+            <% } %>
+          </div>
+
+          <div class="flex-grow-1">
+            <form method="post" action="/profile/avatar" enctype="multipart/form-data"
+                  class="d-flex flex-wrap align-items-end gap-2">
+              <div>
+                <label class="form-label mb-1" for="avatar">รูปโปรไฟล์</label>
+                <input type="file" class="form-control form-control-sm" id="avatar" name="file"
+                       accept="image/png,image/jpeg,image/gif,image/webp" required>
+                <div class="form-text">รองรับ .jpg, .png, .gif, .webp — ขนาดไม่เกิน 5 MB</div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-upload me-1"></i>อัปโหลด
+              </button>
+            </form>
+
+            <% if (currentUser.avatar) { %>
+              <form method="post" action="/profile/avatar/delete" class="mt-2">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirmDelete('ต้องการลบรูปโปรไฟล์นี้?')">
+                  <i class="bi bi-trash me-1"></i>ลบรูปโปรไฟล์
+                </button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+
         <form method="post" action="/profile" novalidate>
           <div class="row g-3">
             <div class="col-md-6">

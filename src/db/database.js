@@ -26,7 +26,18 @@ function getDb() {
   const schema = fs.readFileSync(config.schemaFile, 'utf8');
   db.exec(schema);
 
+  // Migration เล็ก ๆ สำหรับฐานข้อมูลเดิม : เพิ่มคอลัมน์ใหม่ถ้ายังไม่มี (ไม่ลบข้อมูลเก่า)
+  ensureColumn('users', 'avatar', "TEXT NOT NULL DEFAULT ''");
+
   return db;
+}
+
+/** เพิ่มคอลัมน์ให้ตาราง ถ้ายังไม่มี (SQLite ไม่รองรับ ADD COLUMN IF NOT EXISTS จึงต้องเช็คก่อน) */
+function ensureColumn(table, column, definition) {
+  const columns = getDb().prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((col) => col.name === column)) {
+    getDb().exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
 }
 
 /** คำสั่งแบบไม่คืนค่า (INSERT / UPDATE / DELETE) */

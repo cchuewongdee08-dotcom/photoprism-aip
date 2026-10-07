@@ -182,6 +182,25 @@ async function updateProfile(id, values, actor) {
 }
 
 /**
+ * อัปเดตรูปโปรไฟล์ของตัวเอง
+ * @returns {{ user: object, previous: string }} user ที่อัปเดตแล้ว + ชื่อไฟล์รูปเดิม (ให้ route ลบไฟล์เก่า)
+ */
+function updateAvatar(id, avatar, actor) {
+  const target = findById(id);
+  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
+
+  const previous = target.avatar || '';
+
+  db.run(`UPDATE users SET avatar = :avatar WHERE id = :id`, {
+    avatar: avatar || '',
+    id: Number(id),
+  });
+
+  logAction(actor, avatar ? 'UPDATE_AVATAR' : 'REMOVE_AVATAR', target.username);
+  return { user: toPublicUser(findById(id)), previous };
+}
+
+/**
  * เปลี่ยนรหัสผ่านของตัวเอง — ต้องทราบรหัสปัจจุบันก่อน
  * (ต่างจาก Admin reset ที่ไม่ต้องใช้รหัสเก่า)
  */
@@ -343,6 +362,7 @@ module.exports = {
   changeRole,
   changeStatus,
   updateProfile,
+  updateAvatar,
   changeOwnPassword,
   adminUpdateUser,
   deleteUser,

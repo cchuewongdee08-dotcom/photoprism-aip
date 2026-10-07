@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT    NOT NULL UNIQUE,
   password_hash TEXT    NOT NULL,              -- เก็บเป็น bcrypt hash เท่านั้น ห้ามเก็บรหัสจริง
   full_name     TEXT    NOT NULL DEFAULT '',
+  avatar        TEXT    NOT NULL DEFAULT '',   -- ชื่อไฟล์รูปโปรไฟล์ใน public/uploads (ว่าง = ใช้ไอคอนเริ่มต้น)
   role          TEXT    NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   status        TEXT    NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
   created_at    TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))

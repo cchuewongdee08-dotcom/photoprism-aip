@@ -351,6 +351,44 @@ router.post('/profile/password', requireAuthPage, async (req, res, next) => {
   }
 });
 
+// อัปโหลดรูปโปรไฟล์ (รับไฟล์ฟิลด์ชื่อ "file" เหมือนระบบอัปโหลดรูปภาพ)
+router.post(
+  '/profile/avatar',
+  requireAuthPage,
+  withUpload((req, res, next) => {
+    try {
+      if (!req.file) {
+        flash(req, 'danger', 'กรุณาเลือกไฟล์รูปภาพก่อนบันทึก');
+        return res.redirect('/profile');
+      }
+
+      const { user, previous } = userService.updateAvatar(req.user.id, req.file.filename, req.user);
+      if (previous) deleteUploadedFile(previous);
+      req.session.user = user;
+
+      flash(req, 'success', 'อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว');
+      return res.redirect('/profile');
+    } catch (error) {
+      if (req.file) deleteUploadedFile(req.file.filename);
+      return next(error);
+    }
+  })
+);
+
+// ลบรูปโปรไฟล์ (กลับไปใช้ไอคอนเริ่มต้น)
+router.post('/profile/avatar/delete', requireAuthPage, (req, res, next) => {
+  try {
+    const { user, previous } = userService.updateAvatar(req.user.id, '', req.user);
+    if (previous) deleteUploadedFile(previous);
+    req.session.user = user;
+
+    flash(req, 'success', 'ลบรูปโปรไฟล์เรียบร้อยแล้ว');
+    return res.redirect('/profile');
+  } catch (error) {
+    return next(error);
+  }
+});
+
 // ---------------------------------------------------------------
 // หน้าทดสอบสิทธิ์ผ่าน API
 // ---------------------------------------------------------------
