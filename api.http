@@ -1,0 +1,82 @@
+# =============================================================================
+# PhotoPrism — REST API Testing (VS Code REST Client)
+# -----------------------------------------------------------------------------
+# วิธีใช้:
+#   1. ติดตั้ง Extension "REST Client" (humao.rest-client) ใน VS Code
+#   2. รันเซิร์ฟเวอร์:  npm start
+#   3. เปิดไฟล์นี้ แล้วกด "Send Request" ที่ลิงก์เหนือแต่ละ request
+#
+# ลำดับการทดสอบ:
+#   Login  ->  Token + Session ID จะถูกเก็บอัตโนมัติในตัวแปร {{token}}
+#   แล้ว Request ถัด ๆ ไปจะใช้ {{token}} ให้เอง ไม่ต้อง copy-paste
+#
+# หมายเหตุ: ค่า username/password มาจากไฟล์ .env (ไม่ hard-code ในไฟล์นี้)
+# =============================================================================
+
+@baseUrl = {{$dotenv PHOTOPRISM_URL}}
+@username = {{$dotenv PHOTOPRISM_USERNAME}}
+@password = {{$dotenv PHOTOPRISM_PASSWORD}}
+
+# =============================================================================
+### PhotoPrism - Login
+# @name login
+POST {{baseUrl}}/api/v1/session
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+    // เก็บ token / sessionId ที่ได้จาก Login ไว้ใช้กับ request ถัดไป
+    client.global.set("token", response.body.token);
+    client.global.set("sessionId", response.body.sessionId);
+    client.log("token = " + response.body.token);
+    client.log("sessionId = " + response.body.sessionId);
+%}
+
+# =============================================================================
+### PhotoPrism - Current Session (ตรวจว่า token ใช้ได้)
+GET {{baseUrl}}/api/v1/session
+Authorization: Bearer {{token}}
+Accept: application/json
+
+# =============================================================================
+### PhotoPrism - Get Photos
+GET {{baseUrl}}/api/v1/photos?page=1&limit=9
+Authorization: Bearer {{token}}
+Accept: application/json
+
+# =============================================================================
+### PhotoPrism - Search Photos
+# ค้นหาด้วยคีย์เวิร์ด (เทียบกับ title / description / tags)
+# scope: all | mine | public | private
+GET {{baseUrl}}/api/v1/photos?q=sea&scope=all&page=1&limit=9
+Authorization: Bearer {{token}}
+Accept: application/json
+
+# =============================================================================
+### PhotoPrism - Get Photo Detail
+# แทนเลข 1 ด้วย id ของรูปที่ต้องการ
+GET {{baseUrl}}/api/v1/photos/1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+# =============================================================================
+### PhotoPrism - Get Albums
+GET {{baseUrl}}/api/v1/albums
+Authorization: Bearer {{token}}
+Accept: application/json
+
+# =============================================================================
+### PhotoPrism - Logout
+DELETE {{baseUrl}}/api/v1/session
+Authorization: Bearer {{token}}
+Accept: application/json
+
+> {%
+    // ล้าง token หลัง Logout
+    client.global.set("token", "");
+    client.global.set("sessionId", "");
+%}

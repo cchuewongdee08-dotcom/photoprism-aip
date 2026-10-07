@@ -14,6 +14,7 @@ const authRoutes = require('./routes/authRoutes');
 const pageRoutes = require('./routes/pageRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const apiV1Routes = require('./routes/apiV1Routes');
 
 function createApp() {
   const app = express();
@@ -73,6 +74,12 @@ function createApp() {
   app.use('/', authRoutes);
   app.use('/admin', adminRoutes);
   app.use('/api', apiRoutes);
+
+  // REST API v1 (สำหรับ REST Client / curl)
+  //   /api/v1/session        -> login / current session / logout
+  //   /api/v1/photos, /api/v1/albums -> ใช้ handler ชุดเดียวกับ /api (ไม่เขียนซ้ำ)
+  app.use('/api/v1', apiV1Routes);
+  app.use('/api/v1', apiRoutes);
 
   // ---------- 404 / Error ----------
   app.use(notFound);

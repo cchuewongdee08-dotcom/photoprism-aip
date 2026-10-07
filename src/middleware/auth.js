@@ -2,6 +2,7 @@
 
 const userService = require('../services/userService');
 const authService = require('../services/authService');
+const tokenService = require('../services/tokenService');
 
 /**
  * Middleware ระบบสิทธิ์ (Authorization)
@@ -19,10 +20,32 @@ const authService = require('../services/authService');
  * ผลคือ เมื่อ Admin ระงับบัญชี หรือลดสิทธิ์ผู้ใช้ ผู้ใช้คนนั้นจะเสียสิทธิ์ทันที
  * โดยไม่ต้องรอให้เขา Logout ออกจากระบบ
  */
+/** ดึง token จาก header  Authorization: Bearer <token>  หรือ  X-Session-Id: <token> */
+function bearerToken(req) {
+  const auth = (req.get('authorization') || '').trim();
+  const match = /^Bearer\s+(.+)$/i.exec(auth);
+  if (match) return match[1].trim();
+  const sid = (req.get('x-session-id') || '').trim();
+  return sid || null;
+}
+
 function attachUser(req, res, next) {
   req.user = null;
 
-  if (req.session && req.session.user) {
+  // 1) ยืนยันตัวตนด้วย API token (ไม่ต้องใช้ cookie)
+  const token = bearerToken(req);
+  if (token) {
+    const entry = tokenService.resolve(token);
+    if (entry) {
+      const fresh = userService.findById(entry.userId);
+      if (fresh && fresh.status === 'active') {
+        req.user = authService.toPublicUser(fresh);
+      }
+    }
+  }
+
+  // 2) ถ้าไม่ได้ยืนยันด้วย token ให้ใช้ session cookie ตามเดิม
+  if (!req.user && req.session && req.session.user) {
     const fresh = userService.findById(req.session.user.id);
 
     // บัญชีถูกลบออกจากระบบไปแล้ว
@@ -160,6 +183,7 @@ function wantsJson(req) {
 
 module.exports = {
   attachUser,
+  bearerToken,
   requireAuthPage,
   requireAdminPage,
   requireAuthApi,
