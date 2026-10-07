@@ -146,37 +146,6 @@ function validatePasswordChange(body = {}) {
   return { isValid: Object.keys(errors).length === 0, errors, values };
 }
 
-/** ตรวจการรีเซ็ตรหัสผ่านด้วย token จากไฟล์ .env (ไม่ต้องทราบรหัสเก่า) */
-function validatePasswordReset(body = {}) {
-  const values = {
-    token: str(body.token),
-    username: str(body.username),
-    newPassword: str(body.newPassword),
-    confirmPassword: str(body.confirmPassword),
-  };
-  const errors = {};
-
-  if (!values.token) errors.token = 'กรุณากรอกคีย์รีเซ็ตรหัสผ่าน';
-
-  if (!values.username) errors.username = 'กรุณากรอกชื่อผู้ใช้';
-
-  if (!values.newPassword) {
-    errors.newPassword = 'กรุณากรอกรหัสผ่านใหม่';
-  } else if (values.newPassword.length < 6) {
-    errors.newPassword = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
-  } else if (values.newPassword.length > 72) {
-    errors.newPassword = 'รหัสผ่านยาวเกิน 72 ตัวอักษร';
-  }
-
-  if (!values.confirmPassword) {
-    errors.confirmPassword = 'กรุณายืนยันรหัสผ่านใหม่';
-  } else if (values.confirmPassword !== values.newPassword) {
-    errors.confirmPassword = 'รหัสผ่านทั้งสองไม่ตรงกัน';
-  }
-
-  return { isValid: Object.keys(errors).length === 0, errors, values };
-}
-
 /**
  * ตรวจข้อมูลที่ Admin ใช้แก้บัญชีผู้อื่น
  * - ชื่อผู้ใช้ / ชื่อ-นามสกุล บังคับเหมือน validateProfile
@@ -322,7 +291,6 @@ module.exports = {
   validateUserCreate,
   validateProfile,
   validatePasswordChange,
-  validatePasswordReset,
   validateUserEdit,
   validateRole,
   validateStatus,

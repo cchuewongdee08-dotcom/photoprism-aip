@@ -1,0 +1,257 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-people me-2"></i>จัดการผู้ใช้</h4>
+    <p class="text-muted small mb-0">
+      สิทธิ์ระดับ Admin เท่านั้น — เพิ่มผู้ใช้ แก้ชื่อผู้ใช้/ชื่อ-นามสกุล รีเซ็ตรหัสผ่าน
+      เปลี่ยนสิทธิ์ (User/Admin) ระงับหรือเปิดบัญชี และลบผู้ใช้ได้
+    </p>
+  </div>
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+    <i class="bi bi-person-plus me-1"></i>เพิ่มผู้ใช้ใหม่
+  </button>
+</div>
+
+<form class="row g-2 mb-3" method="get" action="/admin/users">
+  <div class="col-md-5">
+    <input type="text" class="form-control" name="q" value="<%= filters.keyword %>"
+           placeholder="ค้นหาจากชื่อผู้ใช้, อีเมล หรือชื่อ-นามสกุล">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="role">
+      <option value="">ทุกสิทธิ์</option>
+      <option value="admin" <%= filters.role === 'admin' ? 'selected' : '' %>>Admin</option>
+      <option value="user"  <%= filters.role === 'user' ? 'selected' : '' %>>User</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="status">
+      <option value="">ทุกสถานะ</option>
+      <option value="active"     <%= filters.status === 'active' ? 'selected' : '' %>>ใช้งาน</option>
+      <option value="suspended"  <%= filters.status === 'suspended' ? 'selected' : '' %>>ถูกระงับ</option>
+    </select>
+  </div>
+  <div class="col-md-2 d-grid">
+    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-filter me-1"></i>กรอง</button>
+  </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 50px">#</th>
+          <th>ผู้ใช้</th>
+          <th>อีเมล</th>
+          <th>สิทธิ์</th>
+          <th>สถานะ</th>
+          <th class="text-center">รูป / Album</th>
+          <th>สมัครเมื่อ</th>
+          <th class="text-center" style="width: 360px">จัดการ (สิทธิ์ Admin)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (users.length === 0) { %>
+          <tr><td colspan="8" class="text-center text-muted py-4">ไม่พบผู้ใช้ตามเงื่อนไขที่ค้นหา</td></tr>
+        <% } %>
+        <% users.forEach((user) => { %>
+          <tr>
+            <td class="text-muted"><%= user.id %></td>
+            <td>
+              <strong><%= user.fullName %></strong><br>
+              <code class="small"><%= user.username %></code>
+              <% if (user.id === currentUser.id) { %>
+                <span class="badge bg-secondary ms-1">คุณ</span>
+              <% } %>
+            </td>
+            <td class="small"><%= user.email %></td>
+            <td>
+              <% if (user.role === 'admin') { %>
+                <span class="badge bg-warning text-dark"><i class="bi bi-shield-fill-check me-1"></i>Admin</span>
+              <% } else { %>
+                <span class="badge bg-info text-dark"><i class="bi bi-person me-1"></i>User</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (user.status === 'active') { %>
+                <span class="badge bg-success">ใช้งาน</span>
+              <% } else { %>
+                <span class="badge bg-danger">ถูกระงับ</span>
+              <% } %>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-light text-dark border"><%= user.photoCount %> รูป</span>
+              <span class="badge bg-light text-dark border"><%= user.albumCount %> Album</span>
+            </td>
+            <td class="small text-muted"><%= user.createdAt %></td>
+            <td>
+              <% if (user.id === currentUser.id) { %>
+                <div class="text-muted small text-center py-2">
+                  <i class="bi bi-info-circle me-1"></i>ไม่สามารถจัดการบัญชีของตัวเองได้ (ระบบป้องกัน)
+                </div>
+              <% } else { %>
+                <div class="d-flex flex-wrap justify-content-center gap-1">
+                  <button class="btn btn-sm btn-outline-primary" type="button"
+                          data-bs-toggle="modal" data-bs-target="#editUserModal-<%= user.id %>"
+                          title="แก้ชื่อผู้ใช้ / ชื่อ-นามสกุล / รีเซ็ตรหัสผ่าน">
+                    <i class="bi bi-pencil me-1"></i>แก้ไข
+                  </button>
+
+                  <form method="post" action="/admin/users/<%= user.id %>/role" class="d-inline">
+                    <input type="hidden" name="role" value="<%= user.role === 'admin' ? 'user' : 'admin' %>">
+                    <button class="btn btn-sm btn-outline-<%= user.role === 'admin' ? 'warning' : 'dark' %>" type="submit"
+                            title="<%= user.role === 'admin' ? 'ลดสิทธิ์เป็น User' : 'เพิ่มสิทธิ์เป็น Admin' %>">
+                      <%= user.role === 'admin' ? 'ลดเป็น User' : 'ทำเป็น Admin' %>
+                    </button>
+                  </form>
+
+                  <form method="post" action="/admin/users/<%= user.id %>/status" class="d-inline">
+                    <input type="hidden" name="status" value="<%= user.status === 'active' ? 'suspended' : 'active' %>">
+                    <button class="btn btn-sm btn-outline-<%= user.status === 'active' ? 'danger' : 'success' %>" type="submit">
+                      <i class="bi bi-<%= user.status === 'active' ? 'pause-circle' : 'play-circle' %> me-1"></i>
+                      <%= user.status === 'active' ? 'ระงับ' : 'เปิดใช้' %>
+                    </button>
+                  </form>
+
+                  <form method="post" action="/admin/users/<%= user.id %>/delete" class="d-inline"
+                        onsubmit="return confirmDelete('ยืนยันการลบผู้ใช้ \"<%= user.username %>\" ? รูปภาพ <%= user.photoCount %> รูปของผู้ใช้นี้จะถูกลบด้วย')">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <span class="text-muted small">ทั้งหมด <%= total %> บัญชี · หน้า <%= page %></span>
+  <nav>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item <%= page <= 1 ? 'disabled' : '' %>">
+        <a class="page-link"
+           href="/admin/users?page=<%= page - 1 %>&q=<%= encodeURIComponent(filters.keyword) %>&role=<%= filters.role %>&status=<%= filters.status %>">ก่อนหน้า</a>
+      </li>
+      <li class="page-item disabled"><span class="page-link">หน้า <%= page %></span></li>
+      <li class="page-item <%= page * perPage >= total ? 'disabled' : '' %>">
+        <a class="page-link"
+           href="/admin/users?page=<%= page + 1 %>&q=<%= encodeURIComponent(filters.keyword) %>&role=<%= filters.role %>&status=<%= filters.status %>">ถัดไป</a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal: เพิ่มผู้ใช้ใหม่ -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="/admin/users" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>เพิ่มผู้ใช้ใหม่ (โดย Admin)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="newUsername">ชื่อผู้ใช้ *</label>
+              <input type="text" class="form-control <%= errors.username ? 'is-invalid' : '' %>"
+                     id="newUsername" name="username" value="<%= values.username || '' %>">
+              <% if (errors.username) { %><div class="invalid-feedback"><%= errors.username %></div><% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="newFullName">ชื่อ-นามสกุล</label>
+              <input type="text" class="form-control" id="newFullName" name="fullName"
+                     value="<%= values.fullName || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="newEmail">อีเมล *</label>
+              <input type="email" class="form-control <%= errors.email ? 'is-invalid' : '' %>"
+                     id="newEmail" name="email" value="<%= values.email || '' %>">
+              <% if (errors.email) { %><div class="invalid-feedback"><%= errors.email %></div><% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="newPassword">รหัสผ่าน *</label>
+              <input type="password" class="form-control <%= errors.password ? 'is-invalid' : '' %>"
+                     id="newPassword" name="password">
+              <% if (errors.password) { %><div class="invalid-feedback"><%= errors.password %></div><% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="newRole">สิทธิ์ *</label>
+              <select class="form-select" id="newRole" name="role">
+                <option value="user" <%= values.role === 'user' ? 'selected' : '' %>>User (ผู้ใช้ทั่วไป)</option>
+                <option value="admin" <%= values.role === 'admin' ? 'selected' : '' %>>Admin (ผู้ดูแลระบบ)</option>
+              </select>
+              <div class="form-text">Admin สามารถจัดการผู้ใช้และข้อมูลทั้งระบบได้</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="newStatus">สถานะ *</label>
+              <select class="form-select" id="newStatus" name="status">
+                <option value="active" <%= values.status === 'active' ? 'selected' : '' %>>ใช้งาน</option>
+                <option value="suspended" <%= values.status === 'suspended' ? 'selected' : '' %>>ถูกระงับ</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>สร้างผู้ใช้</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: แก้ไขผู้ใช้ (สร้างทีละคนตามที่แสดงในตาราง) -->
+<% users.forEach((user) => { %>
+  <% if (user.id === currentUser.id) return; %>
+  <div class="modal fade" id="editUserModal-<%= user.id %>" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="/admin/users/<%= user.id %>/edit" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-pencil-square me-2"></i>แก้ไขบัญชี <code><%= user.username %></code>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label" for="editUsername-<%= user.id %>">ชื่อผู้ใช้ (ใช้ล็อกอิน) *</label>
+              <input type="text" class="form-control" id="editUsername-<%= user.id %>"
+                     name="username" value="<%= user.username %>" maxlength="20"
+                     pattern="[A-Za-z0-9_]{3,20}" required>
+              <div class="form-text">เปลี่ยนแล้วผู้ใช้คนนี้ต้องล็อกอินด้วยชื่อใหม่</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="editFullName-<%= user.id %>">ชื่อ-นามสกุล</label>
+              <input type="text" class="form-control" id="editFullName-<%= user.id %>"
+                     name="fullName" value="<%= user.fullName %>" maxlength="100">
+            </div>
+            <div class="mb-1">
+              <label class="form-label" for="editPassword-<%= user.id %>">รหัสผ่านใหม่ (รีเซ็ต)</label>
+              <input type="password" class="form-control" id="editPassword-<%= user.id %>"
+                     name="password" minlength="6" placeholder="เว้นว่างถ้าไม่ต้องการเปลี่ยน">
+              <div class="form-text">
+                <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                ไม่ต้องทราบรหัสเดิม — เหมาะกับกรณีผู้ใช้ลืมรหัสผ่าน
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>บันทึก</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
+
+<%- include('../partials/footer') %>

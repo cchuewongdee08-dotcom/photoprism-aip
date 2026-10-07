@@ -4,13 +4,6 @@ const path = require('path');
 
 const ROOT_DIR = path.join(__dirname, '..');
 
-// โหลดตัวแปรจากไฟล์ .env (ถ้ามี) เพื่อให้ใช้งานได้โดยไม่ต้องตั้ง environment ล่วงหน้า
-try {
-  process.loadEnvFile(path.join(ROOT_DIR, '.env'));
-} catch {
-  // ไม่มีไฟล์ .env ก็ข้ามไป
-}
-
 const config = {
   appName: 'PhotoPrism',
   port: Number(process.env.PORT) || 3000,
@@ -18,10 +11,6 @@ const config = {
   // Session
   sessionSecret: process.env.SESSION_SECRET || 'photoprism-secret-2026',
   sessionMaxAgeMs: 2 * 60 * 60 * 1000, // 2 ชั่วโมง
-
-  // คีย์ลับสำหรับรีเซ็ตรหัสผ่านด้วย token (ตั้งในไฟล์ .env)
-  // ไม่ตั้งค่า = ปิดการใช้งานฟีเจอร์นี้
-  passwordResetToken: process.env.PASSWORD_RESET_TOKEN || '',
 
   // Paths
   paths: {

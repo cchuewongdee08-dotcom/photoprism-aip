@@ -13,7 +13,7 @@ const express = require('express');
 
 const authService = require('../services/authService');
 const userService = require('../services/userService');
-const { validateLogin, validateRegister, validatePasswordReset } = require('../services/validation');
+const { validateLogin, validateRegister } = require('../services/validation');
 const { logAction } = require('../services/logService');
 
 const router = express.Router();
@@ -111,45 +111,6 @@ router.post('/register', redirectIfLoggedIn, async (req, res, next) => {
     );
 
     req.session.flash = { type: 'success', message: `สมัครบัญชี "${values.username}" สำเร็จ กรุณาเข้าสู่ระบบ` };
-    return res.redirect('/login');
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// ---------------------------------------------------------------
-// Reset Password (รีเซ็ตรหัสด้วยคีย์จาก .env)
-// ---------------------------------------------------------------
-router.get('/reset-password', (req, res) => {
-  res.render('pages/resetPassword', { title: 'รีเซ็ตรหัสผ่าน', errors: {}, values: {} });
-});
-
-router.post('/reset-password', async (req, res, next) => {
-  try {
-    const { isValid, errors, values } = validatePasswordReset(req.body);
-
-    if (!isValid) {
-      return res.status(400).render('pages/resetPassword', {
-        title: 'รีเซ็ตรหัสผ่าน',
-        errors,
-        values: { token: '', username: values.username },
-      });
-    }
-
-    try {
-      await userService.resetPasswordWithToken(values);
-    } catch (error) {
-      if (error.status === 400 || error.status === 401 || error.status === 404 || error.status === 503) {
-        return res.status(error.status).render('pages/resetPassword', {
-          title: 'รีเซ็ตรหัสผ่าน',
-          errors: { form: error.message },
-          values: { token: '', username: values.username },
-        });
-      }
-      throw error;
-    }
-
-    req.session.flash = { type: 'success', message: `รีเซ็ตรหัสผ่านของ "${values.username}" สำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสใหม่` };
     return res.redirect('/login');
   } catch (error) {
     return next(error);

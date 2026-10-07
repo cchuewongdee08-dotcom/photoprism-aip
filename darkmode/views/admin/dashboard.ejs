@@ -1,0 +1,135 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>แดชบอร์ดผู้ดูแลระบบ</h4>
+    <p class="text-muted small mb-0">
+      สวัสดี <strong><%= currentUser.fullName %></strong> — คุณเข้าสู่ระบบด้วยสิทธิ์ระดับ
+      <span class="badge bg-warning text-dark">Admin</span>
+      ซึ่งเห็นข้อมูลทั้งระบบ (รวมรูปส่วนตัวของผู้ใช้)
+    </p>
+  </div>
+  <div class="btn-group">
+    <a class="btn btn-outline-primary" href="/admin/users"><i class="bi bi-people me-1"></i>จัดการผู้ใช้</a>
+    <a class="btn btn-outline-primary" href="/admin/photos"><i class="bi bi-photo-album me-1"></i>จัดการรูปทั้งระบบ</a>
+    <a class="btn btn-outline-secondary" href="/admin/logs"><i class="bi bi-clock-history me-1"></i>บันทึกทั้งหมด</a>
+  </div>
+</div>
+
+<div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
+  <div class="col">
+    <div class="card border-0 shadow-sm text-center h-100">
+      <div class="card-body">
+        <i class="bi bi-people-fill display-6 text-primary"></i>
+        <div class="display-6 fw-bold"><%= stats.users %></div>
+        <div class="text-muted small">ผู้ใช้ทั้งหมด (Admin <%= stats.admins %> / User <%= stats.regularUsers %>)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card border-0 shadow-sm text-center h-100">
+      <div class="card-body">
+        <i class="bi bi-image-fill display-6 text-success"></i>
+        <div class="display-6 fw-bold"><%= stats.photos %></div>
+        <div class="text-muted small">รูปภาพทั้งระบบ (ส่วนตัว <%= stats.privatePhotos %>)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card border-0 shadow-sm text-center h-100">
+      <div class="card-body">
+        <i class="bi bi-folder-fill display-6 text-warning"></i>
+        <div class="display-6 fw-bold"><%= stats.albums %></div>
+        <div class="text-muted small">Album ทั้งระบบ</div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card border-0 shadow-sm text-center h-100">
+      <div class="card-body">
+        <i class="bi bi-hdd-stack display-6 text-info"></i>
+        <div class="display-6 fw-bold"><%= (stats.totalSize / 1048576).toFixed(1) %></div>
+        <div class="text-muted small">MB พื้นที่จัดเก็บรูป</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (stats.suspendedUsers > 0) { %>
+  <div class="alert alert-warning">
+    <i class="bi bi-person-x me-2"></i>
+    มีบัญชีที่ถูกระงับอยู่ <strong><%= stats.suspendedUsers %></strong> บัญชี —
+    ผู้ใช้เหล่านี้จะเข้าสู่ระบบไม่ได้
+    <a href="/admin/users?status=suspended" class="alert-link ms-1">ดูรายชื่อ</a>
+  </div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        <span><i class="bi bi-clock-history me-2"></i>การกระทำล่าสุด</span>
+        <a href="/admin/logs" class="small">ดูทั้งหมด</a>
+      </div>
+      <div class="list-group list-group-flush">
+        <% if (logs.length === 0) { %>
+          <div class="list-group-item text-muted text-center py-4">ยังไม่มีการกระทำ</div>
+        <% } %>
+        <% logs.forEach((log) => { %>
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div>
+                <span class="badge <%= log.username === 'admin' ? 'bg-warning text-dark' : 'bg-info text-dark' %> me-1">
+                  <%= log.username %>
+                </span>
+                <span class="badge bg-light text-dark border"><%= log.action %></span>
+                <span class="ms-1"><%= log.target %></span>
+              </div>
+              <span class="text-muted small text-nowrap"><%= log.created_at %></span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-trophy me-2"></i>ผู้ใช้ที่มีรูปมากที่สุด
+      </div>
+      <div class="list-group list-group-flush">
+        <% topOwners.forEach((owner, index) => { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-light text-dark border me-2">#<%= index + 1 %></span>
+              <strong><%= owner.full_name %></strong>
+              <span class="text-muted small">(<%= owner.username %>)</span>
+              <% if (owner.role === 'admin') { %>
+                <span class="badge bg-warning text-dark ms-1">Admin</span>
+              <% } %>
+            </div>
+            <span class="badge bg-success"><%= owner.photo_count %> รูป</span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-shield-check me-2"></i>สิทธิ์ของผู้ดูแลระบบ
+      </div>
+      <div class="card-body small">
+        <ul class="mb-0 ps-3">
+          <li>ดูและจัดการข้อมูล <strong>ทั้งระบบ</strong> รวมรูปส่วนตัวของผู้ใช้</li>
+          <li>เพิ่ม / แก้ไข / ลบ / ปิดบัญชี / เปลี่ยนสิทธิ์ผู้ใช้</li>
+          <li>ลบรูปภาพของผู้ใช้ได้ทุกใบ</li>
+          <li>ดูบันทึกการกระทำทั้งหมดของระบบ</li>
+          <li>ป้องกันระบบ: ลบ/ปิด/ลดสิทธิ์ของ Admin คนสุดท้ายไม่ได้ และไม่แก้ไขบัญชีตัวเอง</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

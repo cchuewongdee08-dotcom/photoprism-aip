@@ -7,9 +7,6 @@
  *   - Admin ไม่สามารถเปลี่ยนสิทธิ์หรือปิดบัญชีตัวเองได้
  */
 
-const crypto = require('node:crypto');
-
-const config = require('../config');
 const db = require('../db/database');
 const { hashPassword, verifyPassword, toPublicUser } = require('./authService');
 const { logAction } = require('./logService');
@@ -185,25 +182,6 @@ async function updateProfile(id, values, actor) {
 }
 
 /**
- * อัปเดตรูปโปรไฟล์ของตัวเอง
- * @returns {{ user: object, previous: string }} user ที่อัปเดตแล้ว + ชื่อไฟล์รูปเดิม (ให้ route ลบไฟล์เก่า)
- */
-function updateAvatar(id, avatar, actor) {
-  const target = findById(id);
-  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
-
-  const previous = target.avatar || '';
-
-  db.run(`UPDATE users SET avatar = :avatar WHERE id = :id`, {
-    avatar: avatar || '',
-    id: Number(id),
-  });
-
-  logAction(actor, avatar ? 'UPDATE_AVATAR' : 'REMOVE_AVATAR', target.username);
-  return { user: toPublicUser(findById(id)), previous };
-}
-
-/**
  * เปลี่ยนรหัสผ่านของตัวเอง — ต้องทราบรหัสปัจจุบันก่อน
  * (ต่างจาก Admin reset ที่ไม่ต้องใช้รหัสเก่า)
  */
@@ -222,37 +200,6 @@ async function changeOwnPassword(id, currentPassword, newPassword, actor) {
 
   logAction(actor, 'CHANGE_PASSWORD', target.username);
   return toPublicUser(findById(id));
-}
-
-/**
- * รีเซ็ตรหัสผ่านด้วยคีย์ลับจากไฟล์ .env (PASSWORD_RESET_TOKEN)
- * - ไม่ต้องทราบรหัสปัจจุบัน ไม่ต้อง Login
- * - ปิดใช้งานเองถ้าไม่ได้ตั้งค่าคีย์ไว้ใน .env
- */
-async function resetPasswordWithToken({ token, username, newPassword }) {
-  const expected = config.passwordResetToken;
-  if (!expected) {
-    throw new ServiceError('ยังไม่ได้ตั้งค่า PASSWORD_RESET_TOKEN ในไฟล์ .env', 503);
-  }
-
-  const tokenBuf = Buffer.from(String(token));
-  const expectedBuf = Buffer.from(expected);
-  const tokenOk =
-    tokenBuf.length === expectedBuf.length &&
-    crypto.timingSafeEqual(tokenBuf, expectedBuf);
-  if (!tokenOk) throw new ServiceError('คีย์รีเซ็ตรหัสผ่านไม่ถูกต้อง', 401);
-
-  const target = db.get(`SELECT * FROM users WHERE username = :username`, { username });
-  if (!target) throw new ServiceError('ไม่พบผู้ใช้', 404);
-
-  const passwordHash = await hashPassword(newPassword);
-  db.run(`UPDATE users SET password_hash = :passwordHash WHERE id = :id`, {
-    passwordHash,
-    id: Number(target.id),
-  });
-
-  logAction({ id: null, username: 'reset-token' }, 'RESET_PASSWORD_WITH_TOKEN', target.username);
-  return toPublicUser(findById(target.id));
 }
 
 /**
@@ -396,9 +343,7 @@ module.exports = {
   changeRole,
   changeStatus,
   updateProfile,
-  updateAvatar,
   changeOwnPassword,
-  resetPasswordWithToken,
   adminUpdateUser,
   deleteUser,
   countAdmins,

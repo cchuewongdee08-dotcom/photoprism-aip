@@ -1,0 +1,103 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h4 class="mb-1"><i class="bi bi-person-gear me-2"></i>โปรไฟล์ของฉัน</h4>
+        <p class="text-muted small mb-3">
+          สิทธิ์: <span class="badge bg-<%= currentUser.role === 'admin' ? 'warning text-dark' : 'info text-dark' %>">
+            <%= currentUser.role === 'admin' ? 'Admin' : 'User' %>
+          </span>
+          · แก้ไขได้เฉพาะบัญชีของตัวเอง — ระบบจะตรวจชื่อซ้ำและรหัสผ่านที่ Server เสมอ
+        </p>
+
+        <form method="post" action="/profile" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="username">ชื่อผู้ใช้ (ใช้ล็อกอิน) *</label>
+              <input type="text" class="form-control <%= profileErrors.username ? 'is-invalid' : '' %>"
+                     id="username" name="username" value="<%= profileValues.username %>"
+                     maxlength="20" pattern="[A-Za-z0-9_]{3,20}" required>
+              <% if (profileErrors.username) { %>
+                <div class="invalid-feedback"><%= profileErrors.username %></div>
+              <% } else { %>
+                <div class="form-text">A-Z, a-z, 0-9 หรือ _ ความยาว 3-20 ตัว — เปลี่ยนแล้วใช้ชื่อใหม่ล็อกอิน</div>
+              <% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="fullName">ชื่อ-นามสกุล</label>
+              <input type="text" class="form-control <%= profileErrors.fullName ? 'is-invalid' : '' %>"
+                     id="fullName" name="fullName" value="<%= profileValues.fullName %>" maxlength="100">
+              <% if (profileErrors.fullName) { %><div class="invalid-feedback"><%= profileErrors.fullName %></div><% } %>
+              <div class="form-text">แสดงในแถบเมนูบน และเป็นชื่อเจ้าของรูป/Album</div>
+            </div>
+
+            <div class="col-12">
+              <div class="text-muted small">
+                <i class="bi bi-envelope me-1"></i><%= currentUser.email %> ·
+                สมัครเมื่อ <%= currentUser.createdAt %>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary mt-3">
+            <i class="bi bi-check-lg me-1"></i>บันทึกข้อมูลโปรไฟล์
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-key me-2"></i>เปลี่ยนรหัสผ่าน</h5>
+
+        <form method="post" action="/profile/password" novalidate>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="currentPassword">รหัสผ่านปัจจุบัน *</label>
+              <input type="password" class="form-control <%= passwordErrors.currentPassword ? 'is-invalid' : '' %>"
+                     id="currentPassword" name="currentPassword" required>
+              <% if (passwordErrors.currentPassword) { %>
+                <div class="invalid-feedback"><%= passwordErrors.currentPassword %></div>
+              <% } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="newPassword">รหัสผ่านใหม่ *</label>
+              <input type="password" class="form-control <%= passwordErrors.newPassword ? 'is-invalid' : '' %>"
+                     id="newPassword" name="newPassword" minlength="6" required>
+              <% if (passwordErrors.newPassword) { %>
+                <div class="invalid-feedback"><%= passwordErrors.newPassword %></div>
+              <% } else { %>
+                <div class="form-text">อย่างน้อย 6 ตัวอักษร</div>
+              <% } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="confirmPassword">ยืนยันรหัสผ่านใหม่ *</label>
+              <input type="password" class="form-control <%= passwordErrors.confirmPassword ? 'is-invalid' : '' %>"
+                     id="confirmPassword" name="confirmPassword" required>
+              <% if (passwordErrors.confirmPassword) { %>
+                <div class="invalid-feedback"><%= passwordErrors.confirmPassword %></div>
+              <% } %>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-outline-danger mt-3">
+            <i class="bi bi-shield-lock me-1"></i>เปลี่ยนรหัสผ่าน
+          </button>
+        </form>
+
+        <div class="alert alert-info small mt-3 mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          รหัสผ่านถูกเก็บเป็น bcrypt hash — ระบบไม่ทราบรหัสของคุณ
+          และถ้ามีคนเปลี่ยนรหัสคุณจากหน้า Admin คุณจะต้องใช้รหัสใหม่ในการล็อกอินครั้งต่อไป
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

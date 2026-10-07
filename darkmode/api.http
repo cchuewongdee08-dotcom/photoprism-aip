@@ -1,0 +1,127 @@
+# ============================================================
+#  PhotoPrism — REST API v1 (ยิงทดสอบได้เลยใน VS Code)
+# ============================================================
+#
+#  วิธีใช้ (ครั้งเดียว)
+#  1) เปิดเซิร์ฟเวอร์ก่อน :  npm start
+#  2) ติดตั้ง Extension :     REST Client (humao.rest-client)
+#  3) ค่า URL / บัญชี อ่านจากไฟล์ .env อัตโนมัติ
+#  4) กด "Send Request" เหนือบรรทัด POST/GET ที่ต้องการ
+#
+#  ลำดับที่แนะนำ : สมัคร -> เข้าสู่ระบบ -> คำขอที่ต้องใช้ token
+#  "เข้าสู่ระบบ" จะเก็บ token ไว้ใน @token ให้คำขอถัดไปใช้ต่อทันที
+# ============================================================
+
+
+# ------------------------------------------------------------
+#  ตัวแปร (อ่านค่าจาก .env)
+# ------------------------------------------------------------
+@baseUrl  = {{$dotenv PHOTOPRISM_URL}}
+@username = {{$dotenv PHOTOPRISM_USERNAME}}
+@password = {{$dotenv PHOTOPRISM_PASSWORD}}
+
+# ข้อมูลสำหรับทดสอบสมัครสมาชิก
+@signupUsername = {{$dotenv PHOTOPRISM_SIGNUP_USERNAME}}
+@signupEmail    = {{$dotenv PHOTOPRISM_SIGNUP_EMAIL}}
+@signupPassword = {{$dotenv PHOTOPRISM_SIGNUP_PASSWORD}}
+
+# รหัสผ่านใหม่สำหรับทดสอบเปลี่ยนรหัส
+@newPassword = {{$dotenv PHOTOPRISM_NEW_PASSWORD}}
+
+
+# ============================================================
+#  1) สมัครสมาชิก
+# ============================================================
+
+### สมัครสมาชิก (ได้สิทธิ์ user)
+POST {{baseUrl}}/api/v1/register
+Content-Type: application/json
+
+{
+  "username": "{{signupUsername}}",
+  "email": "{{signupEmail}}",
+  "password": "{{signupPassword}}",
+  "confirmPassword": "{{signupPassword}}",
+  "fullName": "ผู้ใช้ทดสอบ"
+}
+
+
+# ============================================================
+#  2) เข้าสู่ระบบ  (เก็บ token อัตโนมัติ)
+# ============================================================
+
+### เข้าสู่ระบบ
+# @name login
+POST {{baseUrl}}/api/v1/session
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+# เก็บ token จาก response มาใช้กับคำขอถัดไป
+@token = {{login.response.body.$.token}}
+
+
+# ============================================================
+#  3) ดูผู้ใช้ปัจจุบัน + เปลี่ยนรหัสผ่าน
+# ============================================================
+
+### ดูผู้ใช้ปัจจุบัน (ตรวจว่า token ใช้ได้)
+GET {{baseUrl}}/api/v1/session
+Authorization: Bearer {{token}}
+
+### เปลี่ยนรหัสผ่านของตัวเอง
+PATCH {{baseUrl}}/api/v1/account/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{password}}",
+  "newPassword": "{{newPassword}}",
+  "confirmPassword": "{{newPassword}}"
+}
+
+### ออกจากระบบ
+DELETE {{baseUrl}}/api/v1/session
+Authorization: Bearer {{token}}
+
+
+# ============================================================
+#  4) รูปภาพ
+# ============================================================
+
+### ดึงรายการรูปภาพ (page, count)
+GET {{baseUrl}}/api/v1/photos?page=1&count=9
+Authorization: Bearer {{token}}
+
+### ค้นหารูปภาพ (q = คำค้นหา)
+GET {{baseUrl}}/api/v1/photos?q=sea&page=1&count=9
+Authorization: Bearer {{token}}
+
+### ดูรายละเอียดรูปภาพ (แก้เลข 1 เป็น id ที่ต้องการ)
+GET {{baseUrl}}/api/v1/photos/1
+Authorization: Bearer {{token}}
+
+
+# ============================================================
+#  5) อัลบั้ม
+# ============================================================
+
+### ดึงรายการอัลบั้ม
+GET {{baseUrl}}/api/v1/albums
+Authorization: Bearer {{token}}
+
+
+# ============================================================
+#  6) ฝั่งผู้ดูแลระบบ (Admin) — บัญชีใน .env ต้องเป็น admin
+# ============================================================
+
+### สถิติระบบ
+GET {{baseUrl}}/api/v1/admin/stats
+Authorization: Bearer {{token}}
+
+### รายชื่อผู้ใช้ทั้งหมด
+GET {{baseUrl}}/api/v1/admin/users?page=1
+Authorization: Bearer {{token}}

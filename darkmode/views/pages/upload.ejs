@@ -1,0 +1,102 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h4 class="mb-3"><i class="bi bi-cloud-arrow-up me-2"></i>อัปโหลดรูปภาพ</h4>
+
+        <form method="post" action="/upload" enctype="multipart/form-data" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="file">ไฟล์รูปภาพ *</label>
+              <input type="file" class="form-control <%= errors.file ? 'is-invalid' : '' %>"
+                     id="file" name="file" accept="image/jpeg,image/png,image/gif,image/webp"
+                     onchange="previewImage(this)">
+              <% if (errors.file) { %>
+                <div class="invalid-feedback"><%= errors.file %></div>
+              <% } else { %>
+                <div class="form-text">รองรับ .jpg, .png, .gif, .webp (สูงสุด 5 MB)</div>
+              <% } %>
+              <div id="preview" class="mt-2 d-none">
+                <img id="previewImg" class="img-thumbnail rounded" style="max-height: 160px">
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="title">ชื่อรูป *</label>
+              <input type="text" class="form-control <%= errors.title ? 'is-invalid' : '' %>"
+                     id="title" name="title" value="<%= values.title || '' %>" maxlength="120">
+              <% if (errors.title) { %><div class="invalid-feedback"><%= errors.title %></div><% } %>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="description">คำอธิบาย</label>
+              <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>"
+                        id="description" name="description" rows="2" maxlength="500"><%= values.description || '' %></textarea>
+              <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="tags">แท็ก</label>
+              <input type="text" class="form-control <%= errors.tags ? 'is-invalid' : '' %>"
+                     id="tags" name="tags" value="<%= values.tags || '' %>" placeholder="ภูเขา, ทริป, ธรรมชาติ">
+              <% if (errors.tags) { %>
+                <div class="invalid-feedback"><%= errors.tags %></div>
+              <% } else { %>
+                <div class="form-text">คั่นแต่ละแท็กด้วยเครื่องหมายจุลภาค</div>
+              <% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="camera">กล้อง / อุปกรณ์</label>
+              <input type="text" class="form-control <%= errors.camera ? 'is-invalid' : '' %>"
+                     id="camera" name="camera" value="<%= values.camera || '' %>" maxlength="80"
+                     placeholder="เช่น iPhone 15">
+              <% if (errors.camera) { %><div class="invalid-feedback"><%= errors.camera %></div><% } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="visibility">สิทธิ์การมองเห็น</label>
+              <select class="form-select" id="visibility" name="visibility">
+                <option value="public" <%= values.visibility === 'public' ? 'selected' : '' %>>
+                  สาธารณะ — ทุกคนเห็นได้
+                </option>
+                <option value="private" <%= values.visibility === 'private' ? 'selected' : '' %>>
+                  ส่วนตัว — เฉพาะฉันและผู้ดูแลระบบ
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="albumId">บันทึกลง Album (ถ้ามี)</label>
+              <select class="form-select" id="albumId" name="albumId">
+                <option value="">— ไม่อยู่ใน Album —</option>
+                <% albums.forEach((album) => { %>
+                  <option value="<%= album.id %>" <%= Number(values.albumId) === album.id ? 'selected' : '' %>>
+                    <%= album.name %> (<%= album.photo_count %> รูป)
+                  </option>
+                <% }) %>
+              </select>
+              <div class="form-text">เพิ่มรูปลง Album ได้เฉพาะ Album ของตัวเอง</div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>อัปโหลด</button>
+            <a class="btn btn-outline-secondary" href="/">ยกเลิก</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="alert alert-info mb-0">
+      <i class="bi bi-shield-lock me-2"></i>
+      <strong>สิทธิ์ของผู้ใช้ระดับ User:</strong>
+      อัปโหลดรูปของตัวเองได้, แก้ไข/ลบได้เฉพาะรูปของตัวเอง,
+      จัดการ Album ของตัวเองเท่านั้น และ <strong>ไม่สามารถ</strong>จัดการผู้ใช้หรือข้อมูลของคนอื่นได้
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

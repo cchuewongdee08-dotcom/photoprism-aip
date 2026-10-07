@@ -1,0 +1,26 @@
+<%# ตัวแบ่งหน้า : ใช้ตัวแปร page, totalPages และ baseUrl %>
+<% if (totalPages > 1) {
+     const qs = Object.entries(query || {}).filter(([k, v]) => k !== 'page' && v !== undefined && v !== '');
+     const buildUrl = (p) => {
+       const params = new URLSearchParams(qs);
+       params.set('page', String(p));
+       return `${baseUrl}?${params.toString()}`;
+     };
+%>
+  <nav aria-label="แบ่งหน้า" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item <%= page <= 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="<%= page <= 1 ? '#' : buildUrl(page - 1) %>">ก่อนหน้า</a>
+      </li>
+      <% for (let p = 1; p <= totalPages; p++) { %>
+        <li class="page-item <%= p === page ? 'active' : '' %>">
+          <a class="page-link" href="<%= buildUrl(p) %>"><%= p %></a>
+        </li>
+      <% } %>
+      <li class="page-item <%= page >= totalPages ? 'disabled' : '' %>">
+        <a class="page-link" href="<%= page >= totalPages ? '#' : buildUrl(page + 1) %>">ถัดไป</a>
+      </li>
+    </ul>
+    <p class="text-center text-muted small">หน้า <%= page %> จาก <%= totalPages %> (ทั้งหมด <%= total %> รายการ)</p>
+  </nav>
+<% } %>

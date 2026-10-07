@@ -75,7 +75,7 @@ Accept: application/json
 # ============================================================
 
 ### 4. ค้นหารูปภาพ
-GET {{baseUrl}}/api/v1/photos?q=แมว&page=1&limit=9
+GET {{baseUrl}}/api/v1/photos?q=anime &page=1&limit=9
 Accept: application/json
 
 
@@ -88,11 +88,11 @@ POST {{baseUrl}}/api/v1/register
 Content-Type: application/json
 
 {
-  "username": "newmember",
-  "email": "newmember@example.com",
+  "username": "dfg",
+  "email": "dfg@gmail.com",
   "password": "123456",
   "confirmPassword": "123456",
-  "fullName": "สมาชิกใหม่"
+  "fullName": "dfg"
 }
 
 

@@ -8,7 +8,6 @@
  *   POST   /api/v1/session            เข้าสู่ระบบ -> คืน token + sessionId
  *   GET    /api/v1/session            ดูผู้ใช้ปัจจุบัน (ตรวจว่า token ใช้ได้)
  *   DELETE /api/v1/session            ออกจากระบบ (ลบ token + session)
- *   GET    /api/v1/my-uploads         ดูรูปที่ตัวเองเป็นคนอัปโหลด (ต้อง Login)
  *   PATCH  /api/v1/account/password   เปลี่ยนรหัสผ่านของตัวเอง
  *
  * ส่วน Photos / Albums ใช้ handler ชุดเดิมของ apiRoutes
@@ -21,9 +20,8 @@ const config = require('../config');
 const authService = require('../services/authService');
 const tokenService = require('../services/tokenService');
 const userService = require('../services/userService');
-const photoService = require('../services/photoService');
 const { logAction } = require('../services/logService');
-const { validateLogin, validateRegister, validatePasswordChange, validatePasswordReset } = require('../services/validation');
+const { validateLogin, validateRegister, validatePasswordChange } = require('../services/validation');
 const { bearerToken, requireAuthApi } = require('../middleware/auth');
 
 const router = express.Router();
@@ -114,55 +112,6 @@ router.delete('/session', async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------
-// My Uploads — GET /api/v1/my-uploads
-// ---------------------------------------------------------------
-// แสดงรูปทั้งหมดที่ "ผู้ใช้ที่ Login อยู่" เป็นคนอัปโหลด
-//
-// สำคัญ : ไม่รับ userId จากฝั่ง Client เด็ดขาด
-//         ระบบจะเอา owner_id จาก session/token ที่ฝั่ง Backend
-//         ตรวจสอบแล้วเท่านั้น จึงดูรูปของคนอื่นด้วย endpoint นี้ไม่ได้
-//
-// สำหรับผู้ใช้ทั่วไป -> เห็นเฉพาะรูปของตัวเอง (รวมที่ตั้ง private)
-// สำหรับ Admin      -> ใช้สิทธิ์เดิมของโปรเจกต์ คือเห็นรูปของทุกคน
-//
-// วันที่อัปโหลดอ่านจากคอลัมน์ photos.created_at ที่มีอยู่แล้วใน schema
-// (ค่าเริ่มต้นคือ datetime('now', 'localtime') ตอนที่อัปโหลด ไม่ต้องเพิ่ม field ใหม่)
-// ---------------------------------------------------------------
-router.get('/my-uploads', requireAuthApi, (req, res, next) => {
-  try {
-    const isAdmin = req.user.role === 'admin';
-
-    // ใช้ photoService ชุดเดิมของโปรเจกต์ ไม่เขียน query ใหม่เอง
-    const result = photoService.listPhotos({
-      user: req.user,
-      scope: isAdmin ? 'all' : 'mine',
-      page: 1,
-      perPage: 1000,
-    });
-
-    const photos = result.photos.map((photo) => ({
-      id: photo.id,
-      filename: photo.original_name || photo.file_name,
-      fileUrl: `/uploads/${photo.file_name}`,
-      title: photo.title,
-      visibility: photo.visibility,
-      owner: photo.owner_username,
-      uploadedAt: photo.created_at,
-    }));
-
-    return res.json({
-      success: true,
-      username: req.user.username,
-      scope: isAdmin ? 'all' : 'mine',
-      total: photos.length,
-      photos,
-    });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// ---------------------------------------------------------------
 // Change Password — PATCH /api/v1/account/password
 // รับ { currentPassword, newPassword, confirmPassword }
 // ต้อง Login ก่อน (ใช้ token จาก /api/v1/session)
@@ -180,24 +129,6 @@ router.patch('/account/password', requireAuthApi, async (req, res, next) => {
     );
 
     return res.json({ message: 'เปลี่ยนรหัสผ่านสำเร็จ' });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// ---------------------------------------------------------------
-// Reset Password with token — POST /api/v1/account/reset-password
-// รับ { token, username, newPassword, confirmPassword }
-// token คือคีย์ลับจากไฟล์ .env (PASSWORD_RESET_TOKEN) — ไม่ต้อง Login
-// ---------------------------------------------------------------
-router.post('/account/reset-password', async (req, res, next) => {
-  try {
-    const { isValid, errors, values } = validatePasswordReset(req.body);
-    if (!isValid) return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', details: errors });
-
-    await userService.resetPasswordWithToken(values);
-
-    return res.json({ message: 'รีเซ็ตรหัสผ่านสำเร็จ' });
   } catch (error) {
     return next(error);
   }

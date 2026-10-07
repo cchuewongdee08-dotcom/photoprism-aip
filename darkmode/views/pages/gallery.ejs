@@ -1,0 +1,62 @@
+﻿<%- include('../partials/header', { title }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h4 class="mb-1"><i class="bi bi-images me-2"></i>แกลเลอรีรูปภาพ</h4>
+    <p class="text-muted small mb-0">
+      พบ <strong><%= total %></strong> รูป
+      <% if (keyword) { %> สำหรับคำค้น "<strong><%= keyword %></strong>"<% } %>
+      <% if (!currentUser) { %> — <span class="text-info">เข้าสู่ระบบเพื่อดูรูปส่วนตัวของคุณ</span><% } %>
+    </p>
+  </div>
+
+  <form class="d-flex gap-2" method="get" action="/">
+    <input type="text" name="q" class="form-control" placeholder="ค้นหาจากชื่อรูป, คำอธิบาย, แท็ก, กล้อง..."
+           value="<%= keyword %>" style="min-width: 280px">
+    <% if (photoScope !== 'all') { %><input type="hidden" name="scope" value="<%= photoScope %>"><% } %>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>ค้นหา</button>
+    <% if (keyword) { %>
+      <a class="btn btn-outline-secondary" href="/">ล้าง</a>
+    <% } %>
+  </form>
+</div>
+
+<% if (currentUser) { %>
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-sm <%= photoScope === 'all' ? 'btn-dark' : 'btn-outline-dark' %>" href="/">
+      <% if (isAdmin) { %>ทั้งระบบ<% } else { %>ทั้งหมดที่ฉันเห็น<% } %>
+    </a>
+    <a class="btn btn-sm <%= photoScope === 'mine' ? 'btn-dark' : 'btn-outline-dark' %>" href="/?scope=mine">รูปของฉัน</a>
+    <a class="btn btn-sm <%= photoScope === 'public' ? 'btn-dark' : 'btn-outline-dark' %>" href="/?scope=public">สาธารณะ</a>
+    <a class="btn btn-sm <%= photoScope === 'private' ? 'btn-dark' : 'btn-outline-dark' %>" href="/?scope=private">ส่วนตัว</a>
+  </div>
+<% } %>
+
+<% if (photos.length === 0) { %>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-image display-4 text-muted"></i>
+      <h5 class="mt-3">ไม่พบรูปภาพ</h5>
+      <p class="text-muted">
+        <% if (keyword) { %>
+          ไม่พบรูปที่ตรงกับคำค้น "<%= keyword %>"
+        <% } else { %>
+          ยังไม่มีรูปภาพในระบบ
+        <% } %>
+      </p>
+      <% if (currentUser) { %>
+        <a class="btn btn-primary" href="/upload"><i class="bi bi-cloud-arrow-up me-1"></i>อัปโหลดรูปแรก</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    <% photos.forEach((photo) => { %>
+      <%- include('../partials/photoCard', { photo }) %>
+    <% }) %>
+  </div>
+
+  <%- include('../partials/pagination', { baseUrl: '/' }) %>
+<% } %>
+
+<%- include('../partials/footer') %>
