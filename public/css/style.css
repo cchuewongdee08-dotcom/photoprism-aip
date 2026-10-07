@@ -590,3 +590,159 @@ pre code { background: transparent; color: inherit; padding: 0; }
 .badge.bg-warning.text-dark { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; color: #451a03 !important; }
 
 .navbar-text { color: rgba(226, 232, 240, 0.9) !important; }
+
+/* ==========================================================
+   Dark Mode (สลับผ่าน data-bs-theme="dark" ที่ <html>)
+   ========================================================== */
+[data-bs-theme="dark"] {
+  --pp-primary: #818cf8;
+  --pp-primary-dark: #a5b4fc;
+  --pp-accent: #a78bfa;
+  --pp-bg: #0b1120;
+  --pp-surface: #111827;
+  --pp-heading: #f1f5f9;
+  --pp-text: #cbd5e1;
+  --pp-muted: #94a3b8;
+  --pp-border: rgba(148, 163, 184, 0.16);
+
+  --pp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+  --pp-shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+  --pp-shadow-lg: 0 24px 48px -24px rgba(0, 0, 0, 0.85);
+}
+
+[data-bs-theme="dark"] body {
+  background-color: var(--pp-bg);
+  background-image:
+    radial-gradient(60rem 40rem at 110% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(50rem 35rem at -20% 0%, rgba(168, 85, 247, 0.14), transparent 55%);
+}
+
+[data-bs-theme="dark"] ::selection {
+  background: rgba(129, 140, 248, 0.35);
+  color: #fff;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb { background: #334155; }
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+[data-bs-theme="dark"] .card-header {
+  background: linear-gradient(180deg, #1e293b 0%, #172033 100%);
+  color: var(--pp-heading);
+}
+
+[data-bs-theme="dark"] .card-footer { background: #172033; }
+
+[data-bs-theme="dark"] .photo-thumb { background-color: #1e293b; }
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: var(--pp-text);
+}
+
+[data-bs-theme="dark"] .form-control:hover,
+[data-bs-theme="dark"] .form-select:hover { border-color: #475569; }
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: #0f172a;
+  border-color: rgba(129, 140, 248, 0.6);
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+[data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
+
+[data-bs-theme="dark"] .table thead th { background: #1e293b; color: #cbd5e1; }
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
+  --bs-table-accent-bg: rgba(99, 102, 241, 0.14);
+}
+
+[data-bs-theme="dark"] .page-link {
+  background: #111827;
+  border-color: var(--pp-border);
+  color: var(--pp-primary);
+}
+
+[data-bs-theme="dark"] .app-navbar .dropdown-menu { background: #111827; }
+[data-bs-theme="dark"] .app-navbar .dropdown-item { color: #cbd5e1; }
+[data-bs-theme="dark"] .app-navbar .dropdown-item:hover {
+  background: rgba(129, 140, 248, 0.16);
+  color: #fff;
+}
+
+[data-bs-theme="dark"] .alert-info { background: rgba(13, 202, 240, 0.15); color: #7dd3fc; }
+[data-bs-theme="dark"] .alert-warning { background: rgba(255, 193, 7, 0.16); color: #fcd34d; }
+[data-bs-theme="dark"] .alert-danger { background: rgba(220, 53, 69, 0.18); color: #fca5a5; }
+[data-bs-theme="dark"] .alert-success { background: rgba(25, 135, 84, 0.18); color: #86efac; }
+
+[data-bs-theme="dark"] .modal-header { background: linear-gradient(180deg, #1e293b, #172033); }
+
+[data-bs-theme="dark"] .app-footer { background: rgba(15, 23, 42, 0.72); }
+
+[data-bs-theme="dark"] .breadcrumb { background: rgba(30, 41, 59, 0.75); }
+[data-bs-theme="dark"] .breadcrumb-item + .breadcrumb-item::before { color: #64748b; }
+
+[data-bs-theme="dark"] .badge.bg-light.text-dark.border {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] code { background-color: #1e293b; color: #a5b4fc; }
+
+/* ทับคลาสยูทิลิตี้ของ Bootstrap ที่มี !important */
+[data-bs-theme="dark"] .bg-white { background-color: var(--pp-surface) !important; }
+[data-bs-theme="dark"] .bg-light { background-color: #172033 !important; }
+[data-bs-theme="dark"] .bg-body,
+[data-bs-theme="dark"] .bg-body-tertiary { background-color: var(--pp-bg) !important; }
+
+[data-bs-theme="dark"] .card-header.bg-white {
+  background: linear-gradient(180deg, #1e293b 0%, #172033 100%) !important;
+  color: var(--pp-heading);
+}
+
+[data-bs-theme="dark"] .card-footer.bg-white { background: transparent !important; }
+[data-bs-theme="dark"] .modal-header.bg-white { background: linear-gradient(180deg, #1e293b, #172033) !important; }
+
+[data-bs-theme="dark"] .table {
+  --bs-table-color: var(--pp-text);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--pp-border);
+}
+
+[data-bs-theme="dark"] .table > :not(caption) > * > * { background-color: transparent; }
+
+[data-bs-theme="dark"] .table-light {
+  --bs-table-bg: #1e293b;
+  --bs-table-color: #cbd5e1;
+  --bs-table-border-color: var(--pp-border);
+}
+
+[data-bs-theme="dark"] .table-light > :not(caption) > * > * { background-color: #1e293b; color: #cbd5e1; }
+
+[data-bs-theme="dark"] .list-group-item { background-color: var(--pp-surface); color: var(--pp-text); }
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: var(--pp-text);
+}
+
+[data-bs-theme="dark"] .text-dark { color: var(--pp-text) !important; }
+[data-bs-theme="dark"] .text-muted { color: var(--pp-muted) !important; }
+
+[data-bs-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+/* ปุ่มสลับธีม */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.theme-toggle i { font-size: 1rem; }

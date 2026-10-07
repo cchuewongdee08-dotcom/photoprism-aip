@@ -8,6 +8,30 @@ function confirmDelete(message) {
   return window.confirm(message || 'ยืนยันการดำเนินการนี้?');
 }
 
+/** อัปเดตไอคอนปุ่มตามธีมปัจจุบัน */
+function updateThemeIcon() {
+  const button = document.getElementById('themeToggle');
+  if (!button) return;
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  const icon = button.querySelector('i');
+  if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
+}
+
+/** สลับโหมดสว่าง/มืด และจดจำค่าที่เลือก */
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-bs-theme') === 'dark';
+  if (isDark) {
+    root.removeAttribute('data-bs-theme');
+  } else {
+    root.setAttribute('data-bs-theme', 'dark');
+  }
+  try {
+    localStorage.setItem('pp-theme', isDark ? 'light' : 'dark');
+  } catch (e) {}
+  updateThemeIcon();
+}
+
 /** แสดงตัวอย่างรูปก่อนอัปโหลด */
 function previewImage(input) {
   const box = document.getElementById('preview');
@@ -107,6 +131,8 @@ async function runDemoRequest(button) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  updateThemeIcon();
+
   document.querySelectorAll('.btn-try').forEach((button) => {
     button.addEventListener('click', () => runDemoRequest(button));
   });
