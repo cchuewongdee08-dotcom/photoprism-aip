@@ -177,6 +177,21 @@ E:\PhotoPrism
 
 ทุก response เป็น JSON · ต้องใช้ session cookie (`photoprism.sid`) เมื่อระบุว่า Login
 
+### Authentication (v1 — แนะนำสำหรับทดสอบใน VS Code)
+
+ใช้ token แบบ Bearer · ไฟล์ `api.http` มีตัวอย่างพร้อมกด **Send Request** ได้เลย
+(ค่า URL/บัญชีอ่านจาก `.env`)
+
+| Method | Path | สิทธิ์ | คำอธิบาย |
+| --- | --- | --- | --- |
+| POST | `/api/v1/register` | ทุกคน | สมัครสมาชิกใหม่ `{ username, email, password, confirmPassword, fullName? }` |
+| POST | `/api/v1/session` | ทุกคน | เข้าสู่ระบบ -> คืน `token` |
+| GET | `/api/v1/session` | Login | ดูผู้ใช้ปัจจุบัน |
+| DELETE | `/api/v1/session` | Login | ออกจากระบบ |
+| PATCH | `/api/v1/account/password` | Login | เปลี่ยนรหัสผ่านตัวเอง |
+
+Photos / Albums / Admin ใช้ path ชุดเดียวกับด้านล่าง แต่เปลี่ยน `/api` เป็น `/api/v1`
+
 ### Authentication
 
 | Method | Path | สิทธิ์ | คำอธิบาย |
