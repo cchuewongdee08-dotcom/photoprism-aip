@@ -20,6 +20,10 @@
 # =============================================================================
 ### PhotoPrism - Login
 # @name login
+# ใช้สำหรับ: เข้าสู่ระบบกับ PhotoPrism
+# รับ username/password จากไฟล์ .env (PHOTOPRISM_USERNAME, PHOTOPRISM_PASSWORD)
+# Response จะมี token, sessionId, expiresIn, user
+# REST Client จะเก็บ token/sessionId อัตโนมัติไว้ใช้ Request ถัดไป
 POST {{baseUrl}}/api/v1/session
 Content-Type: application/json
 
@@ -29,54 +33,67 @@ Content-Type: application/json
 }
 
 > {%
-    // เก็บ token / sessionId ที่ได้จาก Login ไว้ใช้กับ request ถัดไป
-    client.global.set("token", response.body.token);
-    client.global.set("sessionId", response.body.sessionId);
-    client.log("token = " + response.body.token);
-    client.log("sessionId = " + response.body.sessionId);
+  client.global.set("token", response.body.token);
+  client.global.set("sessionId", response.body.sessionId);
 %}
 
 # =============================================================================
 ### PhotoPrism - Current Session (ตรวจว่า token ใช้ได้)
+# ใช้สำหรับ: ตรวจสอบสถานะการล็อกอินปัจจุบัน
+# ต้องส่ง Authorization: Bearer {{token}}
+# คืนข้อมูลผู้ใช้ที่ล็อกอินอยู่ (หรือ 401 ถ้า token หมดอายุ/ไม่ถูกต้อง)
 GET {{baseUrl}}/api/v1/session
 Authorization: Bearer {{token}}
 Accept: application/json
 
 # =============================================================================
 ### PhotoPrism - Get Photos
+# ใช้สำหรับ: ดึงรายการรูปภาพทั้งหมดตามสิทธิ์ของผู้ใช้ที่ล็อกอิน
+# Query: page=หน้าที่, limit=จำนวนต่อหน้า
+# คืน total, page, totalPages, viewer, photos[]
 GET {{baseUrl}}/api/v1/photos?page=1&limit=9
 Authorization: Bearer {{token}}
 Accept: application/json
 
 # =============================================================================
 ### PhotoPrism - Search Photos
-# ค้นหาด้วยคีย์เวิร์ด (เทียบกับ title / description / tags)
-# scope: all | mine | public | private
+# ใช้สำหรับ: ค้นหารูปภาพตาม keyword
+# Query: q=คำค้นหา (ค้นหาใน title, description, tags)
+#        scope=ขอบเขตข้อมูล (all | mine | public | private)
+#        page, limit
+# คืนผลลัพธ์ตามสิทธิ์ของผู้ใช้ที่ล็อกอิน
 GET {{baseUrl}}/api/v1/photos?q=sea&scope=all&page=1&limit=9
 Authorization: Bearer {{token}}
 Accept: application/json
 
 # =============================================================================
 ### PhotoPrism - Get Photo Detail
-# แทนเลข 1 ด้วย id ของรูปที่ต้องการ
+# ใช้สำหรับ: ดูรายละเอียดรูปภาพรายอัน
+# แทนเลข 1 ด้วย photoId ที่ต้องการ
+# ตรวจสิทธิ์: ผู้ใช้เห็นได้เฉพาะรูปของตัวเองหรือ public (Admin เห็นทุกอัน)
 GET {{baseUrl}}/api/v1/photos/1
 Authorization: Bearer {{token}}
 Accept: application/json
 
 # =============================================================================
 ### PhotoPrism - Get Albums
+# ใช้สำหรับ: ดึงรายการอัลบั้ม
+# ผู้ใช้ทั่วไป: ดึงอัลบั้มของตัวเอง (scope=mine)
+# Admin: สามารถดึงอัลบั้มทั้งหมด (scope=all) แต่ default ของ API คือ mine
 GET {{baseUrl}}/api/v1/albums
 Authorization: Bearer {{token}}
 Accept: application/json
 
 # =============================================================================
 ### PhotoPrism - Logout
+# ใช้สำหรับ: ออกจากระบบ
+# ลบ API token + ทำลาย session
+# REST Client จะล้าง {{token}}/{{sessionId}} อัตโนมัติหลังส่งสำเร็จ
 DELETE {{baseUrl}}/api/v1/session
 Authorization: Bearer {{token}}
 Accept: application/json
 
 > {%
-    // ล้าง token หลัง Logout
-    client.global.set("token", "");
-    client.global.set("sessionId", "");
+  client.global.set("token", "");
+  client.global.set("sessionId", "");
 %}
